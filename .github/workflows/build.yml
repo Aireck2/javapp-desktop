@@ -1,0 +1,28 @@
+name: build
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build + test (Gradle Wrapper)
+        shell: bash
+        run: ./gradlew build jacocoTestReport --info
+      - name: jpackage DMG (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: ./gradlew jpackageDmg
+      - name: jpackage EXE-MSI (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: ./gradlew jpackageExe
