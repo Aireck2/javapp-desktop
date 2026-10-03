@@ -3,14 +3,14 @@ package com.javapp.api.dto;
 import com.javapp.common.RiskLevel;
 
 public record StudentSummary(
-        String materiaId,
-        String alumnoId,
-        double hDictadas,
-        double hAsistidas,
-        double hFaltas,
-        double hJustificadas,
-        double hExentas,
-        double porcentaje,
-        double margenHoras,
-        double restantesHoras,
-        RiskLevel riesgo) {}
+        String courseId,
+        String studentId,
+        double taughtHours,
+        double attendedHours,
+        double missedHours,
+        double excusedHours,
+        double exemptHours,
+        double percentage,
+        double marginHours,
+        double remainingHours,
+        RiskLevel risk) {}
