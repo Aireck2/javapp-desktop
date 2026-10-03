@@ -1,31 +1,50 @@
 package com.javapp.api;
 
+import com.javapp.api.dto.ClassSession;
+import com.javapp.api.dto.Course;
 import com.javapp.api.dto.LoginRequest;
-import com.javapp.api.dto.Materia;
-import com.javapp.api.dto.SesionClase;
 import com.javapp.api.dto.SessionTokens;
+import com.javapp.api.dto.Student;
 import com.javapp.api.dto.StudentSummary;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Contrato HTTP (fase MVP: {@link MockApiClient}). Fase 2: {@code HttpApiClient} real.
+ * HTTP contract (MVP phase: {@link MockApiClient}). Phase 2: real
+ * {@code HttpApiClient}.
  */
 public interface ApiClient {
 
     SessionTokens login(LoginRequest req) throws ApiException;
 
-    List<Materia> materiasForCurrentUser() throws ApiException;
+    /**
+     * Renews the session with the stored refresh token (mvp.md §2.1 Splash).
+     * Equivalent to {@code POST /api/v1/auth/refresh}. Throws {@code AUTH}
+     * (401) when invalid/expired.
+     */
+    SessionTokens refresh(String refreshToken) throws ApiException;
 
-    /** Solo fechas válidas US-08: pasadas/hoy, PROGRAMADA o DICTADA (nunca FERIADA/SUSPENDIDA/futura). */
-    List<SesionClase> sesionesValidas(String materiaId) throws ApiException;
+    List<Course> coursesForCurrentUser() throws ApiException;
 
-    StudentSummary resumenAlumno(String materiaId, String alumnoId) throws ApiException;
+    /** Only valid dates US-08: past/today, PROGRAMADA or DICTADA (never FERIADA/SUSPENDIDA/future). */
+    List<ClassSession> validSessions(String courseId) throws ApiException;
+
+    /** Course roster (detail view): students enrolled in the course. */
+    List<Student> studentsByCourse(String courseId) throws ApiException;
 
     /**
-     * Guarda asistencia. {@code presentesPorAlumno}: alumnoId → array de N booleans
-     * (uno por hora didáctica del bloque; true = Presente).
-     * Al guardar la sesión pasa a DICTADA (US-08 CA4).
+     * Session window for "My courses" (today … today+5): includes future dates
+     * inside the range, excludes FERIADA/SUSPENDIDA, ordered by date.
      */
-    void guardarAsistencia(String sesionId, Map<String, boolean[]> presentesPorAlumno) throws ApiException;
+    List<ClassSession> sessionsWindow(LocalDate from, LocalDate to) throws ApiException;
+
+    StudentSummary studentSummary(String courseId, String studentId) throws ApiException;
+
+    /**
+     * Saves attendance. {@code attendanceByStudent}: studentId → N-boolean array
+     * (one per teaching hour of the block; true = present).
+     * On save the session moves to DICTADA (US-08 CA4).
+     */
+    void saveAttendance(String sessionId, Map<String, boolean[]> attendanceByStudent) throws ApiException;
 }
