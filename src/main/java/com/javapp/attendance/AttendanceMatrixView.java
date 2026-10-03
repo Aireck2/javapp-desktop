@@ -1,41 +1,48 @@
 package com.javapp.attendance;
 
 import com.javapp.api.ApiClient;
-import com.javapp.api.dto.Materia;
-import com.javapp.api.dto.SesionClase;
+import com.javapp.api.dto.ClassSession;
+import com.javapp.api.dto.ClassSession.SessionStatus;
+import com.javapp.api.dto.Course;
 import com.javapp.api.dto.StudentSummary;
+import com.javapp.common.AttendanceExport;
+import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 /**
- * US-16 (MVP): matriz alumnos × fechas con colores, tooltip y pendientes.
- * Detalle por celda: DICTADA (horas del bloque) vs PROGRAMADA (pendiente).
+ * US-16 + US-14: students × dates matrix with colors, tooltip, pending marks
+ * and xlsx export. Per-cell detail: DICTADA (block hours) vs PROGRAMADA
+ * (pending).
  */
 public class AttendanceMatrixView extends VBox {
 
-    private static final List<String> ALUMNOS = List.of("alu-01", "alu-02", "alu-03");
+    private static final List<String> STUDENTS = List.of("alu-01", "alu-02", "alu-03");
 
     public AttendanceMatrixView(ApiClient api) {
         super(10);
         setPadding(new Insets(16));
         var title = new Label("Histórico · matriz de asistencia");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        var materiaBox = new ComboBox<Materia>();
-        materiaBox.setItems(FXCollections.observableArrayList(api.materiasForCurrentUser()));
-        materiaBox.setConverter(new javafx.util.StringConverter<>() {
+        var courseBox = new ComboBox<Course>();
+        courseBox.setItems(FXCollections.observableArrayList(api.coursesForCurrentUser()));
+        courseBox.setConverter(new javafx.util.StringConverter<>() {
             @Override
-            public String toString(Materia m) {
-                return m == null ? "" : m.codigo();
+            public String toString(Course c) {
+                return c == null ? "" : c.code();
             }
 
             @Override
-            public Materia fromString(String s) {
+            public Course fromString(String s) {
                 return null;
             }
         });
@@ -45,43 +52,71 @@ public class AttendanceMatrixView extends VBox {
         var info = new Label();
         info.setWrapText(true);
 
-        materiaBox.getSelectionModel().selectedItemProperty().addListener((o, a, m) -> {
+        courseBox.getSelectionModel().selectedItemProperty().addListener((o, a, c) -> {
             grid.getChildren().clear();
-            if (m == null) {
+            if (c == null) {
                 return;
             }
-            List<SesionClase> sesiones = api.sesionesValidas(m.id());
+            List<ClassSession> sessions = api.validSessions(c.id());
             grid.add(new Label("Alumno \\ Fecha"), 0, 0);
-            for (int c = 0; c < sesiones.size(); c++) {
-                grid.add(new Label(sesiones.get(c).fecha().toString()), c + 1, 0);
+            for (int col = 0; col < sessions.size(); col++) {
+                grid.add(new Label(sessions.get(col).date().toString()), col + 1, 0);
             }
-            for (int r = 0; r < ALUMNOS.size(); r++) {
-                String alu = ALUMNOS.get(r);
-                grid.add(new Label(alu), 0, r + 1);
-                StudentSummary sum = api.resumenAlumno(m.id(), alu);
-                for (int c = 0; c < sesiones.size(); c++) {
-                    SesionClase s = sesiones.get(c);
+            for (int row = 0; row < STUDENTS.size(); row++) {
+                String student = STUDENTS.get(row);
+                grid.add(new Label(student), 0, row + 1);
+                StudentSummary summary = api.studentSummary(c.id(), student);
+                for (int col = 0; col < sessions.size(); col++) {
+                    ClassSession s = sessions.get(col);
                     var cell = new Label();
                     cell.setMinWidth(64);
-                    if (s.estado() == SesionClase.EstadoSesion.DICTADA) {
-                        cell.setText("● " + s.bloqueHoras() + "h");
+                    if (s.status() == SessionStatus.DICTADA) {
+                        cell.setText("● " + s.blockHours() + "h");
                         cell.setStyle("-fx-background-color: #1f6feb; -fx-text-fill: white; -fx-padding: 4;");
                         cell.setTooltip(new Tooltip(
-                                alu + " · " + s.fecha() + " · Dictada · resumen: "
-                                        + String.format("%.1f%%", sum.porcentaje())));
+                                student + " · " + s.date() + " · Dictada · resumen: "
+                                        + String.format("%.1f%%", summary.percentage())));
                     } else {
                         cell.setText("○ pend.");
                         cell.setStyle("-fx-background-color: #6e7681; -fx-text-fill: white; -fx-padding: 4;");
-                        cell.setTooltip(new Tooltip(alu + " · " + s.fecha() + " · Pendiente de registro"));
+                        cell.setTooltip(new Tooltip(student + " · " + s.date() + " · Pendiente de registro"));
                     }
-                    grid.add(cell, c + 1, r + 1);
+                    grid.add(cell, col + 1, row + 1);
                 }
             }
             info.setText("Filas=alumnos, columnas=fechas. ● Dictada · ○ pendiente. Filtros: ciclo/materia (MVP: materia).");
         });
-        if (!materiaBox.getItems().isEmpty()) {
-            materiaBox.getSelectionModel().selectFirst();
+        if (!courseBox.getItems().isEmpty()) {
+            courseBox.getSelectionModel().selectFirst();
         }
-        getChildren().addAll(title, new Label("Materia:"), materiaBox, grid, info);
+        var btnExport = new Button("Exportar Listado a Excel (.xlsx)");
+        btnExport.setOnAction(e -> {
+            Course c = courseBox.getValue();
+            if (c == null) {
+                return;
+            }
+            var fc = new FileChooser();
+            fc.setInitialFileName("matriz-" + c.code() + ".xlsx");
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel", "*.xlsx"));
+            var file = fc.showSaveDialog(getScene() != null ? getScene().getWindow() : null);
+            if (file == null) {
+                return;
+            }
+            try {
+                List<ClassSession> sessions = api.validSessions(c.id());
+                List<AttendanceExport.StudentRow> rows = new ArrayList<>();
+                for (String student : STUDENTS) {
+                    StudentSummary s = api.studentSummary(c.id(), student);
+                    rows.add(new AttendanceExport.StudentRow(
+                            student, student, s.attendedHours(), s.missedHours(),
+                            s.percentage(), s.risk().name()));
+                }
+                AttendanceExport.exportMatriz(c.code(), sessions, rows, file);
+                info.setText("Exportado a " + file.getName() + " (US-14).");
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR, "Export falló: " + ex.getMessage()).showAndWait();
+            }
+        });
+        getChildren().addAll(title, new Label("Materia:"), courseBox, grid, btnExport, info);
     }
 }
