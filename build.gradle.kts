@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.javapp"
-version = "0.1.0-MVP"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -27,11 +27,13 @@ javafx {
 val atlantaFxVersion = "2.0.1"
 val jacksonVersion = "2.17.2"
 val jwtVersion = "4.4.0"
+val poiVersion = "5.2.5"
 
 dependencies {
     implementation("io.github.mkpaz:atlantafx-base:$atlantaFxVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.auth0:java-jwt:$jwtVersion")
+    implementation("org.apache.poi:poi-ooxml:$poiVersion")
     implementation("org.slf4j:slf4j-simple:2.0.13")
 
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
@@ -59,7 +61,6 @@ tasks.jacocoTestReport {
     }
 }
 
-// Verificación MVP: test + reporte cobertura
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
 }
@@ -71,7 +72,10 @@ fun jpackageTask(name: String, type: String): TaskProvider<Exec> =
         group = "distribution"
         description = "Genera instalador nativo $type con jpackage (requiere build previo)"
         dependsOn(tasks.build)
-        val appVersion = project.version.toString()
+
+        val appVersion = project.version.toString().split("-")[0]
+            .split(".").mapIndexed { i, p -> if (i == 0) p.toIntOrNull()?.coerceAtLeast(1)?.toString() ?: "1" else p }
+            .joinToString(".").ifBlank { "1.0.0" }
         val jarTask = tasks.named<Jar>("jar")
         doFirst {
             logger.lifecycle("jpackage $type — app $appVersion (mock MVP, sin backend real)")
