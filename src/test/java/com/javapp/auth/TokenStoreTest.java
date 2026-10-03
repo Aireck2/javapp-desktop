@@ -27,7 +27,7 @@ class TokenStoreTest {
     }
 
     @Test
-    void guardarNull_limpia() {
+    void saveNull_clears() {
         store.saveRefreshToken("x");
         store.saveRefreshToken(null);
         assertThat(store.loadRefreshToken()).isEmpty();
