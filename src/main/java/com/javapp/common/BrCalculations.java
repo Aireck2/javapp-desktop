@@ -13,21 +13,21 @@ public final class BrCalculations {
 
     /** BR-03. Si no hay horas exigibles (denominador ≤ 0) retorna 100.0. Resultado en [0,100]. */
     public static double attendancePercentage(
-            double hAsistidas, double hDictadas, double hJustificadas, double hExentas) {
-        double denominator = hDictadas - hJustificadas - hExentas;
+            double attendedHours, double taughtHours, double excusedHours, double exemptHours) {
+        double denominator = taughtHours - excusedHours - exemptHours;
         if (denominator <= 0) {
             return 100.0;
         }
-        double pct = (hAsistidas / denominator) * 100.0;
+        double pct = (attendedHours / denominator) * 100.0;
         return Math.min(100.0, Math.max(0.0, pct));
     }
 
     /** BR-06: margen de faltas en horas. */
-    public static double marginHours(double hExigiblesTotales, double maxFaltasRatio) {
-        if (hExigiblesTotales <= 0 || maxFaltasRatio <= 0) {
+    public static double marginHours(double totalRequiredHours, double maxFaltasRatio) {
+        if (totalRequiredHours <= 0 || maxFaltasRatio <= 0) {
             return 0.0;
         }
-        return hExigiblesTotales * maxFaltasRatio;
+        return totalRequiredHours * maxFaltasRatio;
     }
 
     /** BR-06: semáforo por consumo del margen. */
