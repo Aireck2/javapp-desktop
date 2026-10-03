@@ -5,7 +5,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
-group = "com.javapp"
+group = "com.app"
 version = "0.1.0"
 
 repositories {
@@ -43,7 +43,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.javapp.App")
+    mainClass.set("com.app.MainApp")
 }
 
 tasks.withType<Test> {
@@ -86,7 +86,7 @@ fun jpackageTask(name: String, type: String): TaskProvider<Exec> =
             "--app-version", appVersion,
             "--input", jarTask.get().destinationDirectory.get().asFile.absolutePath,
             "--main-jar", jarTask.get().archiveFileName.get(),
-            "--main-class", "com.javapp.App",
+            "--main-class", "com.app.MainApp",
             "--type", type,
             "--dest", layout.buildDirectory.dir("jpackage").get().asFile.absolutePath,
             "--java-options", "-Xmx512m"
