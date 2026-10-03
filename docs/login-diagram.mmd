@@ -1,0 +1,44 @@
+flowchart TD
+    classDef pantalla fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff;
+    classDef decision fill:#334155,stroke:#f59e0b,stroke-width:2px,color:#fff;
+    classDef accion fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#fff;
+    classDef error fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fff;
+
+    P_Splash["<b>Pantalla: Splash / Bienvenida</b><br/>Comprobar persistencia de sesión local"]:::pantalla
+    
+    D_Access{"¿Access Token<br/>presente y válido?"}:::decision
+    D_Refresh{"¿Refresh Token<br/>presente y válido?"}:::decision
+
+    P_Splash --> D_Access
+    D_Access -- No / Expirado --> D_Refresh
+    
+    %% Renovación de Token
+    A_ReqRefresh["Enviar solicitud POST /api/v1/auth/refresh"]:::accion
+    D_Refresh -- Sí --> A_ReqRefresh
+    A_ReqRefresh --> D_Renovacion{"¿Backend responde<br/>200 OK?"}:::decision
+    
+    D_Renovacion -- Sí --> A_SaveNewTokens["Actualizar Access + Refresh Token<br/>en Keyring / Preferences"]:::accion
+    D_Renovacion -- No / 401 --> P_Login
+
+    %% Login Form
+    D_Refresh -- No / Expirado --> P_Login
+    P_Login["<b>Pantalla: Iniciar Sesión</b><br/>Ingreso de Correo Institucional + Contraseña"]:::pantalla
+    
+    A_LoginReq["Enviar credenciales a POST /api/v1/auth/login"]:::accion
+    D_Creds{"¿Credenciales<br/>válidas?"}:::decision
+    P_ErrLogin["Mostrar mensaje genérico de error"]:::error
+
+    P_Login -->|Clic en Ingresar| A_LoginReq
+    A_LoginReq --> D_Creds
+    D_Creds -- No --> P_ErrLogin
+    P_ErrLogin --> P_Login
+    
+    D_Creds -- Sí --> A_SaveLoginTokens["Almacenar Tokens JWT + Rol del Usuario"]:::accion
+
+    %% Redirecciones según Rol
+    D_Access -- Sí --> D_CheckRole{"Evaluar Rol del Usuario<br/>(Claim en JWT)"}:::decision
+    A_SaveNewTokens --> D_CheckRole
+    A_SaveLoginTokens --> D_CheckRole
+
+    D_CheckRole -- ROLE_ALUMNO --> R_Alumno["Redirigir a Flujo Alumno"]:::accion
+    D_CheckRole -- ROLE_DOCENTE --> R_Docente["Redirigir a Flujo Docente"]:::accion

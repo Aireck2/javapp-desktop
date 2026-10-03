@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    actor Alumno as Carril: Alumno
+    participant UI as Carril: App Desktop (JavaFX)
+    participant API as Carril: Backend API (Spring Boot)
+    participant DB as Carril: Base de Datos (SQLite)
+
+    %% Inicio del flujo en el Dashboard
+    rect rgb(245, 247, 250)
+        note over Alumno, DB: Pantalla: Lista de Materias (Ciclo Activo)
+        Alumno->>UI: Accede a la pantalla principal
+        UI->>UI: Lee ID de usuario y JWT Token de la sesión
+        UI->>API: GET /api/v1/alumno/materias (Bearer Token)
+    end
+
+    %% Procesamiento Backend
+    rect rgb(238, 242, 255)
+        API->>API: Validar Token JWT y Rol (ROLE_ALUMNO)
+        API->>DB: Consultar secciones matriculadas en el ciclo activo
+        DB-->>API: Retorna lista de materias, docentes y secciones
+        API->>DB: Consultar registros de asistencia por materia (Hasistidas, Hdictadas, Hjustificadas, Hexentas)
+        DB-->>API: Retorna métricas de horas acumuladas
+        API->>API: Aplicar BR-03 (% Asistencia) y BR-04 (Exención por matrícula extemporánea)
+        API->>API: Aplicar BR-06 (Cálculo de consumo del margen de faltas y Semáforo)
+        API-->>UI: 200 OK (DTO de Materias + Métricas + Estado de Semáforo)
+    end
+
+    %% Renderizado en la Interfaz
+    rect rgb(240, 253, 244)
+        UI->>UI: Renderizar Tarjetas de Materia (Nombre, Código, Sección, Docente, Horario)
+        UI->>UI: Aplicar estilo visual de AtlantaFX al Semáforo (Verde / Amarillo / Rojo)
+        UI-->>Alumno: Visualiza lista de materias con sus métricas e indicador de riesgo DPI
+    end
