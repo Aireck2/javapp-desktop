@@ -44,6 +44,11 @@ public interface ApiClient {
 
   StudentSummary studentSummary(String courseId, String studentId) throws ApiException;
 
+  /** Returns the saved per-hour marks for a session, when it has already been recorded. */
+  default Map<String, boolean[]> attendanceForSession(String sessionId) throws ApiException {
+    return Map.of();
+  }
+
   /**
    * Saves attendance. {@code attendanceByStudent}: studentId → N-boolean array
    * (one per teaching hour of the block; true = present).
