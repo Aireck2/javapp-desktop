@@ -6,7 +6,6 @@ import com.app.api.dto.ClassSession;
 import com.app.api.dto.ClassSession.SessionStatus;
 import com.app.api.dto.Course;
 import com.app.api.dto.StudentSummary;
-import com.app.common.AttendanceExport;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,12 +27,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 /**
  * US-08 + mvp.md §4 (unified view): general header, roster with % and risk
  * semaphore per row, N checkboxes per hour (checked=present), save → DICTADA,
- * draft autosave US-09 and xlsx export US-14. Admin use; teachers use
+ * draft autosave US-09. Admin use; teachers use
  * {@link MyCoursesView} + {@link CourseDetailView}.
  */
 public class TakeAttendanceView extends VBox {
@@ -75,35 +73,6 @@ public class TakeAttendanceView extends VBox {
         var detail = new VBox(8);
         var status = new Label();
         status.setWrapText(true);
-
-        var btnExport = new Button("Exportar Listado a Excel (.xlsx)");
-        btnExport.setOnAction(e -> {
-            Course c = courseBox.getValue();
-            if (c == null) {
-                return;
-            }
-            var fc = new FileChooser();
-            fc.setInitialFileName("asistencia-" + c.code() + ".xlsx");
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel", "*.xlsx"));
-            var file = fc.showSaveDialog(getScene() != null ? getScene().getWindow() : null);
-            if (file == null) {
-                return;
-            }
-            try {
-                List<ClassSession> sessions = api.validSessions(c.id());
-                List<AttendanceExport.StudentRow> rows = new ArrayList<>();
-                for (String student : STUDENTS) {
-                    StudentSummary summary = api.studentSummary(c.id(), student);
-                    rows.add(new AttendanceExport.StudentRow(
-                            student, student, summary.attendedHours(), summary.missedHours(),
-                            summary.percentage(), summary.risk().name()));
-                }
-                AttendanceExport.exportMatriz(c.code(), sessions, rows, file);
-                status.setText("Exportado a " + file.getName() + " (US-14).");
-            } catch (Exception ex) {
-                new Alert(Alert.AlertType.ERROR, "Export falló: " + ex.getMessage()).showAndWait();
-            }
-        });
 
         courseBox.getSelectionModel().selectedItemProperty().addListener((o, a, c) -> {
             if (c == null) {
@@ -206,7 +175,7 @@ public class TakeAttendanceView extends VBox {
             courseBox.getSelectionModel().selectFirst();
         }
         getChildren().addAll(title, new Label("Materia (ciclo activo):"), courseBox, header,
-                new Label("Fechas habilitadas:"), sessionList, detail, btnExport, status);
+                new Label("Fechas habilitadas:"), sessionList, detail, status);
     }
 
     private static Map<String, boolean[]> snapshot(Map<String, List<CheckBox>> boxes) {
