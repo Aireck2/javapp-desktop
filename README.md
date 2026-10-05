@@ -1,161 +1,117 @@
 <div align="center">
 
-<img src="src/main/resources/images/logo.png" alt="javapp-desktop logo" width="96" />
+<img src="src/main/resources/images/logo.png" alt="Javapp Desktop logo" width="88" />
 
-# javapp-desktop
+# Javapp Desktop
 
-*Native JavaFX desktop client for academic attendance control*
+*Desktop app for academic attendance and course management*
 
 [![Build](https://github.com/Aireck2/javapp-desktop/actions/workflows/build.yml/badge.svg)](https://github.com/Aireck2/javapp-desktop/actions/workflows/build.yml)
 ![Java 21](https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![JavaFX 21](https://img.shields.io/badge/JavaFX-21-5382a1?style=flat-square)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=flat-square)
+![Desktop](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=flat-square)
 
-[Overview](#overview) • [Features](#features) • [Getting started](#getting-started) • [Configuration](#configuration) • [Project structure](#project-structure) • [Testing](#testing) • [Troubleshooting](#troubleshooting)
+[Features](#features) · [Getting started](#getting-started) · [Configuration](#configuration) · [Project structure](#project-structure) · [Build and test](#build-and-test)
 
 </div>
 
-## Overview
-
-`javapp-desktop` is a native desktop app (JavaFX + AtlantaFX) for managing academic attendance: role-based login, teacher course views with per-hour marking, student margin dashboard, and an attendance history matrix.
+Javapp Desktop is a JavaFX client for tracking class attendance. It includes role-based portals for administrators, teachers, and students, with course views, per-hour attendance entry, and attendance summaries.
 
 > [!NOTE]
-> This MVP runs against an in-memory `MockApiClient` — no backend required. The `ApiClient` interface is ready for a real HTTP implementation without changing views.
-
-**Stack:** Java 21, JavaFX 21.0.4, AtlantaFX 2.0.1 (PrimerLight), Jackson, java-jwt, Apache POI, JUnit 5 + Mockito + AssertJ, JaCoCo, Gradle wrapper, `jpackage`.
+> The app currently uses an in-memory `MockApiClient`; it does not require a backend. `ApiClient` defines the contract for a future service implementation.
 
 ## Features
 
-- **Role-based access:** splash screen with refresh-token auto-login, generic error on bad credentials, auto-logout on inactivity. Each role lands on its own home view.
-- **Teacher — Mis cursos:** sessions grouped by date (today through +5 days, date as section title). Empty today shows "Sin sesión hoy" while upcoming days keep listing. Each card shows course code, section, schedule, hour block, status, enrollment count, and detail navigation.
-- **Teacher — Course detail:** roster with code, full name, attended / missed hours, attendance %, and DPI risk semaphore with remaining margin. One checkbox per teaching hour (`checked = Presente`, `unchecked = Falta`). Saving marks the session `Dictada`. Future sessions are read-only. Includes 60-second draft autosave with same-day restore and one-click `.xlsx` export.
-- **Student dashboard:** per-course attendance %, remaining miss margin, and risk semaphore (green / amber / red → DPI). `Falta Justificada` and `Exento` never consume margin.
-- **History matrix (Admin):** students × dates grid with color coding, detail tooltips, and pending-session markers.
+- **Role-based access:** splash screen with refresh-token sign-in, login, and automatic logout after inactivity.
+- **Course timeline:** view sessions from today through the next five days, grouped by date, with course and session details.
+- **Attendance entry:** mark each student present or absent by teaching hour, search and filter the roster, apply bulk marks, and save the session.
+- **Draft recovery:** attendance changes autosave every 60 seconds and can be restored during the same day. Drafts are held in memory and do not survive an app restart.
+- **Student dashboard:** course attendance percentages, absence margin, and risk level. Justified absences and exempt hours do not consume the margin.
+- **User profile:** view the signed-in user's name, username, and roles.
 
 ## Getting started
 
-### Prerequisites
+### Requirements
 
-- JDK 21 full (not JRE — `jpackage` requires it). For example:
-  ```bash
-  brew install --cask temurin@21
-  ```
-- No global Gradle needed — the wrapper (`gradlew` / `gradlew.bat`) is included.
+- JDK 21. A full JDK is needed to build native installers with `jpackage`.
+- Git.
+- No system Gradle installation is needed; use the included wrapper.
 
-> [!IMPORTANT]
-> JavaFX 21 requires JDK 21. Running with another JDK will fail at startup.
-
-### Run the app
+### Run locally
 
 ```bash
-git clone git@github.com:Aireck2/javapp-desktop.git
+git clone https://github.com/Aireck2/javapp-desktop.git
 cd javapp-desktop
 ./gradlew run
 ```
 
-On Windows:
-
-```powershell
-.\gradlew.bat run
-```
+On Windows, run `gradlew.bat run` from PowerShell or Command Prompt.
 
 ### Demo accounts
 
-Password is `demo` for all users:
+All demo accounts use the password `demo`.
 
-| User | Role | Sees |
+| Username | Role | Start page |
 | --- | --- | --- |
-| `admin` | ADMIN | Take attendance, history, student panel |
-| `docente` | DOCENTE | Mis cursos only |
-| `alumno` | ALUMNO | Personal dashboard only |
-
-> [!TIP]
-> Log in as `docente`, open a course from "Mis cursos", save attendance on today's session, then log in as `alumno` — the % and semaphore recalculate immediately.
-
-### Commands
-
-```bash
-./gradlew run          # Launch the app
-./gradlew test         # Unit tests
-./gradlew build        # Compile + tests + coverage report
-./gradlew jpackageDmg  # macOS installer (requires build first)
-./gradlew jpackageExe  # Windows installer (run on Windows / CI)
-```
+| `admin` | Administrator | Course timeline and attendance workflow |
+| `docente` | Teacher | Course timeline and attendance workflow |
+| `alumno` | Student | Personal attendance dashboard |
 
 ## Configuration
 
-Centralized in `config.AppConfig`, overridable via `-Djavapp.*` system properties or environment variables:
+Settings can be provided as Java system properties (`-D...`) or environment variables.
 
-| Property / env var | Default | Purpose |
-| --- | --- | --- |
-| `javapp.baseUrl` / `JAVAPP_BASE_URL` | `http://localhost:8080/api` | Reserved for the future HTTP client |
-| `javapp.inactivityMinutes` / `JAVAPP_INACTIVITY_MINUTES` | `15` | Auto-logout after inactivity |
-| `javapp.maxFaltas` / `JAVAPP_MAX_FALTAS` | `0.30` | Max miss ratio per cycle |
-| `javapp.splashMinMillis` / `JAVAPP_SPLASH_MIN_MILLIS` | `5000` | Minimum visible splash time |
+| Setting | Environment variable | Default | Purpose |
+| --- | --- | --- | --- |
+| `javapp.baseUrl` | `JAVAPP_BASE_URL` | `http://localhost:8080/api` | Reserved for a future HTTP client |
+| `javapp.inactivityMinutes` | `JAVAPP_INACTIVITY_MINUTES` | `15` | Idle time before automatic logout |
+| `javapp.maxFaltas` | `JAVAPP_MAX_FALTAS` | `0.30` | Maximum absence ratio used for the risk margin |
+| `javapp.splashMinMillis` | `JAVAPP_SPLASH_MIN_MILLIS` | `5000` | Minimum time the splash screen is shown |
+
+## Attendance rules
+
+- Session states are `PROGRAMADA`, `DICTADA`, `FERIADA`, and `SUSPENDIDA`. Future sessions are read-only in attendance entry.
+- Attendance percentage is calculated from attended hours after excluding justified and exempt hours from the denominator.
+- The absence margin is total required course hours multiplied by the configured maximum absence ratio.
+- Risk is green through 50% of the margin, amber above 50% and below 100%, and red at 100% or more. Justified and exempt hours do not consume the margin.
 
 ## Project structure
 
-```
+```text
 src/main/java/com/app/
-├── MainApp.java              # Shell, AtlantaFX theme, role router, inactivity watchdog
-├── session/UserSession.java  # RAM-only singleton: token, groups, RBAC checks
-├── auth/                     # SplashView, LoginView, TokenStore (Preferences refresh token)
-├── navigation/ScreenRouter.java
-├── layout/MainShell.java
-├── api/                      # ApiClient interface, MockApiClient, dto/* records
-├── attendance/               # MyCoursesView, CourseDetailView, TakeAttendanceView, AttendanceMatrixView
-├── dashboard/                # StudentDashboardView
-├── common/                   # BrCalculations, RiskLevel, AttendanceExport (.xlsx)
-└── config/AppConfig.java      # Centralized settings with env overrides
-src/test/java/com/app/        # Unit tests mirroring the main tree
+├── api/          # ApiClient, in-memory mock, errors, and DTOs
+├── attendance/  # Course timeline, course detail, and attendance model mapping
+├── auth/         # Splash flow and refresh-token storage
+├── common/       # Attendance calculations and risk levels
+├── components/   # Shared header, navigation, and course/student cards
+├── dashboard/   # Student attendance dashboard
+├── layout/       # Shared portal shell and role-based routing
+├── models/       # UI presentation models
+├── navigation/  # Screen router
+└── views/        # Login, profile, and attendance detail views
 ```
 
-### API contract
-
-`ApiClient` is the seam between UI and data. `MockApiClient` implements it in memory; a future HTTP client must honor the same interface without changing views.
-
-| Method | Future REST equivalent | Rules |
-| --- | --- | --- |
-| `login` / `refresh` | `POST /api/v1/auth/login` · `POST /api/v1/auth/refresh` | Generic `AUTH` error on bad credentials; refresh `401` falls back to login |
-| `coursesForCurrentUser` | `GET /api/v1/{rol}/materias` | Course cards with section, teacher, schedule |
-| `studentsByCourse` | `GET /materias/{id}/alumnos` | Roster with institutional code + full name |
-| `sessionsWindow(from, to)` | `GET /materias/sesiones?desde&hasta` | Today through +5 days, excludes `Feriada`/`Suspendida`, sorted by date |
-| `validSessions(courseId)` | `GET /materias/{id}/sesiones?validas` | Past/today only, `Programada` or `Dictada` |
-| `studentSummary` | `GET /materias/{id}/alumnos/{alu}/resumen` | % and margin + risk calculation |
-| `saveAttendance` | `POST /sesiones/{id}/asistencia` | Array length must equal block hours; marks session `Dictada` |
-
-Errors surface as `ApiException(Kind: AUTH | VALIDATION | NOT_FOUND)`.
-
-### Business rules (summary)
-
-- Session states `Programada → Dictada | Feriada | Suspendida`; per-student states `Presente | Falta | Falta Justificada | Exento`. No late-arrival state.
-- `% = H_asistidas / (H_dictadas − H_justificadas − H_exentas) × 100`. Example: `6 / (10 − 2) = 75%`.
-- `margin = H_exigibles × %máx_faltas`; consumption = `Falta` hours. Green ≤ 50%, amber 51–99%, red ≥ 100% → DPI.
-
-## Testing
-
-JUnit 5 + Mockito + AssertJ, with JaCoCo coverage (target ≥ 70% on `common` / `session` / `api`).
+## Build and test
 
 ```bash
-./gradlew test   # must be green before every commit
+./gradlew compileJava  # Compile the application
+./gradlew test         # Run unit tests
+./gradlew build        # Build and run verification tasks
 ```
 
-Covered: login / JWT claims, refresh renew + `401`, valid-date filtering, save → `Dictada` + recalculation, future-date rejection, `Justificada`/`Exento` exclusions, semaphore edges (50 / 51 / 99 / 100%), roster + date-window fixtures, `.xlsx` export. UI is verified manually per role via `./gradlew run`.
+GitHub Actions builds and tests on macOS and Windows. It also packages a DMG on macOS and Windows installers on Windows.
 
-## Packaging
-
-`jpackage` ships with JDK 21. Build first, then package for the host OS. Windows installers are produced via CI.
+To create an installer locally, use JDK 21 on the target platform:
 
 ```bash
-./gradlew build
-./gradlew jpackageDmg  # macOS, run on macOS
-./gradlew jpackageExe  # Windows, run on Windows / CI
+./gradlew jpackageDmg  # macOS
+./gradlew jpackageExe  # Windows
 ```
 
-Output goes to `build/jpackage/`.
+Installers are written to `build/jpackage/`.
 
 ## Troubleshooting
 
-- **Blank window / CSS warnings on startup:** AtlantaFX logs them harmlessly if the theme JAR resolves slowly; the stylesheet still applies.
-- **`jpackage` not found:** install a full JDK 21 (not JRE) and verify with `jpackage --version` (should print `21.x`).
-- **Tests fail on `TokenStoreTest`:** it uses the `com/javapp/desktop-test-tokenstore` Preferences node — clear it with `defaults delete com.javapp.desktop-test-tokenstore` on macOS.
+- **`jpackage` is missing:** install a full JDK 21 and check `jpackage --version`.
+- **JavaFX startup fails:** verify the app is running with JDK 21; JavaFX 21 is configured by the Gradle plugin.
+- **A test leaves Java Preferences behind:** `TokenStoreTest` uses the `com/javapp/desktop-test-tokenstore` node. On macOS, remove it with `defaults delete com.javapp.desktop-test-tokenstore`.
