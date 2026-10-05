@@ -27,14 +27,16 @@ javafx {
 val atlantaFxVersion = "2.0.1"
 val jacksonVersion = "2.17.2"
 val jwtVersion = "4.4.0"
-val poiVersion = "5.2.5"
 
 dependencies {
     implementation("io.github.mkpaz:atlantafx-base:$atlantaFxVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.auth0:java-jwt:$jwtVersion")
-    implementation("org.apache.poi:poi-ooxml:$poiVersion")
     implementation("org.slf4j:slf4j-simple:2.0.13")
+    // Ikonli Core + Feather Icons (o FontAwesome / Material)
+    implementation("org.kordamp.ikonli:ikonli-javafx:12.3.1")
+    implementation("org.kordamp.ikonli:ikonli-feather-pack:12.3.1")
+    implementation("org.kordamp.ikonli:ikonli-material2-pack:12.3.1")
 
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
