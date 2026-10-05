@@ -5,23 +5,18 @@ import com.app.api.dto.ClassSession;
 import com.app.api.dto.ClassSession.SessionStatus;
 import com.app.api.dto.Course;
 import com.app.api.dto.StudentSummary;
-import com.app.common.AttendanceExport;
-import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 /**
- * US-16 + US-14: students × dates matrix with colors, tooltip, pending marks
- * and xlsx export. Per-cell detail: DICTADA (block hours) vs PROGRAMADA
+ * US-16: students × dates matrix with colors, tooltip, and pending marks.
+ * Per-cell detail: DICTADA (block hours) vs PROGRAMADA
  * (pending).
  */
 public class AttendanceMatrixView extends VBox {
@@ -89,34 +84,6 @@ public class AttendanceMatrixView extends VBox {
         if (!courseBox.getItems().isEmpty()) {
             courseBox.getSelectionModel().selectFirst();
         }
-        var btnExport = new Button("Exportar Listado a Excel (.xlsx)");
-        btnExport.setOnAction(e -> {
-            Course c = courseBox.getValue();
-            if (c == null) {
-                return;
-            }
-            var fc = new FileChooser();
-            fc.setInitialFileName("matriz-" + c.code() + ".xlsx");
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel", "*.xlsx"));
-            var file = fc.showSaveDialog(getScene() != null ? getScene().getWindow() : null);
-            if (file == null) {
-                return;
-            }
-            try {
-                List<ClassSession> sessions = api.validSessions(c.id());
-                List<AttendanceExport.StudentRow> rows = new ArrayList<>();
-                for (String student : STUDENTS) {
-                    StudentSummary s = api.studentSummary(c.id(), student);
-                    rows.add(new AttendanceExport.StudentRow(
-                            student, student, s.attendedHours(), s.missedHours(),
-                            s.percentage(), s.risk().name()));
-                }
-                AttendanceExport.exportMatriz(c.code(), sessions, rows, file);
-                info.setText("Exportado a " + file.getName() + " (US-14).");
-            } catch (Exception ex) {
-                new Alert(Alert.AlertType.ERROR, "Export falló: " + ex.getMessage()).showAndWait();
-            }
-        });
-        getChildren().addAll(title, new Label("Materia:"), courseBox, grid, btnExport, info);
+        getChildren().addAll(title, new Label("Materia:"), courseBox, grid, info);
     }
 }
