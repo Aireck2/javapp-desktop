@@ -10,3 +10,7 @@ out/
 .DS_Store
 .idea/
 .vscode/
+.classpath
+.project
+.settings/
+bin/
