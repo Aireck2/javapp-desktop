@@ -1,23 +1,24 @@
 package com.app;
 
+import java.time.Duration;
+
 import com.app.api.ApiClient;
 import com.app.api.MockApiClient;
 import com.app.auth.SplashView;
 import com.app.auth.TokenStore;
-import com.app.components.MobileViewWrapper;
 import com.app.config.AppConfig;
 import com.app.layout.MainShell;
 import com.app.navigation.ScreenRouter;
 import com.app.session.UserSession;
 import com.app.views.LoginView;
+
 import atlantafx.base.theme.PrimerLight;
-import java.time.Duration;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.geometry.Insets;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
