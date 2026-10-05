@@ -4,8 +4,12 @@ import com.app.api.ApiClient;
 import com.app.api.ApiException;
 import com.app.api.dto.ClassSession;
 import com.app.api.dto.Course;
+import com.app.components.CourseCard;
+import com.app.mappers.CourseModelMapper;
+import com.app.models.CourseModel;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -13,100 +17,146 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
 /**
- * Teacher role view 1 — "Mis cursos": sessions grouped by date (today …
- * today+5), with the date as section title. No session today → "Sin sesión
- * hoy".
+ * Vista "Mis Cursos" del Portal Docente.
+ * Muestra las sesiones y cursos agrupados cronológicamente (Hoy … +5 días)
+ * utilizando tarjetas interactivas {@link CourseCard} construidas a partir de {@link CourseModel}.
  */
 public class MyCoursesView extends VBox {
 
-    private static final DateTimeFormatter TITLE =
+    private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("EEEE dd/MM", new Locale("es"));
 
+    private final ApiClient api;
+    private final Consumer<ClassSession> onDetail;
+    private final Consumer<ClassSession> onTakeAttendance;
+
     public MyCoursesView(ApiClient api, Consumer<ClassSession> onDetail) {
-        super(10);
+        this(api, onDetail, onDetail);
+    }
+
+    public MyCoursesView(
+            ApiClient api,
+            Consumer<ClassSession> onDetail,
+            Consumer<ClassSession> onTakeAttendance) {
+
+        super(16);
+        this.api = api;
+        this.onDetail = onDetail;
+        this.onTakeAttendance = onTakeAttendance;
+
         setPadding(new Insets(16));
+        setStyle("-fx-background-color: transparent;");
 
-        var title = new Label("Mis cursos");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
-        getChildren().add(title);
+        buildView();
+    }
 
-        var status = new Label();
-        status.setWrapText(true);
+    private void buildView() {
+        getChildren().clear();
 
-        var sections = new VBox(12);
-        var scroll = new ScrollPane(sections);
-        scroll.setFitToWidth(true);
-        scroll.setPrefHeight(560);
-        getChildren().addAll(scroll, status);
+        Label pageTitle = new Label("Mis Cursos");
+        pageTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #0F172A;");
+
+        Label pageSubtitle = new Label("Próximas sesiones programadas (Hoy … +5 días)");
+        pageSubtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748B;");
+
+        VBox titleBox = new VBox(2, pageTitle, pageSubtitle);
+        getChildren().add(titleBox);
 
         try {
             LocalDate today = LocalDate.now();
-            List<ClassSession> window = api.sessionsWindow(today, today.plusDays(5));
-            Map<String, Course> courses = api.coursesForCurrentUser().stream()
-                    .collect(Collectors.toMap(Course::id, c -> c));
-            Map<LocalDate, List<ClassSession>> byDate = window.stream()
-                    .collect(Collectors.groupingBy(ClassSession::date, TreeMap::new, Collectors.toList()));
+            List<ClassSession> windowSessions = api.sessionsWindow(today, today.plusDays(5));
+            List<Course> coursesList = api.coursesForCurrentUser();
+            Map<String, Course> coursesMap = coursesList.stream()
+                    .collect(Collectors.toMap(Course::id, c -> c, (a, b) -> a));
 
-            if (window.isEmpty()) {
-                sections.getChildren().add(new Label("Sin sesiones próximas (hoy … +5 días)."));
+            // Cache de alumnos matriculados por curso
+            Map<String, Integer> enrolledMap = new HashMap<>();
+            for (Course c : coursesList) {
+                try {
+                    enrolledMap.put(c.id(), api.studentsByCourse(c.id()).size());
+                } catch (ApiException ignored) {
+                    enrolledMap.put(c.id(), 0);
+                }
+            }
+
+            if (windowSessions.isEmpty()) {
+                VBox emptyBox = createEmptyState("Sin sesiones próximas en los siguientes 5 días.");
+                getChildren().add(emptyBox);
                 return;
             }
+
+            Map<LocalDate, List<ClassSession>> byDate = windowSessions.stream()
+                    .collect(Collectors.groupingBy(ClassSession::date, TreeMap::new, Collectors.toList()));
+
+            VBox timelineContainer = new VBox(18);
+
             for (int i = 0; i <= 5; i++) {
                 LocalDate date = today.plusDays(i);
-                var header = new Label(sectionTitle(date, i == 0));
-                header.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;");
-                var box = new VBox(8);
-                box.getChildren().add(header);
                 List<ClassSession> daySessions = byDate.getOrDefault(date, List.of());
+
+                VBox daySection = new VBox(10);
+                Label sectionHeader = new Label(formatSectionTitle(date, i == 0));
+                sectionHeader.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + (i == 0 ? "#064E3B" : "#334155") + ";");
+                daySection.getChildren().add(sectionHeader);
+
                 if (daySessions.isEmpty()) {
-                    box.getChildren().add(new Label(i == 0 ? "Sin sesión hoy." : "Sin sesiones este día."));
+                    Label noSessionLabel = new Label(i == 0 ? "Sin sesión programada para hoy." : "Sin sesiones este día.");
+                    noSessionLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #94A3B8; -fx-padding: 4 0 4 8;");
+                    daySection.getChildren().add(noSessionLabel);
+                } else {
+                    for (ClassSession session : daySessions) {
+                        Course course = coursesMap.get(session.courseId());
+                        int enrolled = enrolledMap.getOrDefault(session.courseId(), 0);
+                        int completedHours = session.blockHours() * 4; // Horas estimadas/acumuladas
+
+                        CourseModel model = CourseModelMapper.toModel(course, session, enrolled, completedHours);
+
+                        CourseCard card = new CourseCard(model, true, m -> {
+                            if ("Clase Hoy".equalsIgnoreCase(m.badgeType()) && onTakeAttendance != null) {
+                                onTakeAttendance.accept(session);
+                            } else if (onDetail != null) {
+                                onDetail.accept(session);
+                            }
+                        });
+
+                        daySection.getChildren().add(card);
+                    }
                 }
-                for (ClassSession s : daySessions) {
-                    box.getChildren().add(card(api, courses.get(s.courseId()), s, onDetail));
-                }
-                sections.getChildren().add(box);
+
+                timelineContainer.getChildren().add(daySection);
             }
-            status.setText("Ventana hoy … +5 días. Pulse «Ir a detalle» para abrir el curso.");
+
+            getChildren().add(timelineContainer);
+
         } catch (ApiException e) {
-            status.setText("Error: " + e.getMessage());
+            Label errorLabel = new Label("No fue posible cargar las sesiones: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: #DC2626; -fx-font-weight: bold; -fx-padding: 12;");
+            getChildren().add(errorLabel);
         }
     }
 
-    private static String sectionTitle(LocalDate date, boolean isToday) {
-        String base = date.format(TITLE);
-        base = base.substring(0, 1).toUpperCase(new Locale("es")) + base.substring(1);
-        return (isToday ? "Hoy · " : "") + base;
+    private static String formatSectionTitle(LocalDate date, boolean isToday) {
+        String base = date.format(DATE_FORMATTER);
+        if (base != null && !base.isEmpty()) {
+            base = base.substring(0, 1).toUpperCase(new Locale("es")) + base.substring(1);
+        }
+        return (isToday ? "📌 HOY · " : "📅 ") + base;
     }
 
-    private static VBox card(
-            ApiClient api, Course course, ClassSession session, Consumer<ClassSession> onDetail) {
-        var box = new VBox(4);
-        box.setPadding(new Insets(10));
-        box.setStyle("-fx-border-color: #4a4a4a; -fx-border-radius: 6; -fx-background-radius: 6;");
-        String name = course == null ? session.courseId() : course.name();
-        String code = course == null ? "" : course.code();
-        String section = course == null ? "" : course.section();
-        String schedule = course == null ? "" : course.schedule();
-        int enrolled = 0;
-        try {
-            enrolled = api.studentsByCourse(session.courseId()).size();
-        } catch (ApiException ignored) {
-        }
-        var l1 = new Label(code + " · " + name + " · " + section);
-        l1.setStyle("-fx-font-weight: bold;");
-        l1.setWrapText(true);
-        var l2 = new Label(schedule + " · " + session.blockHours() + "h · " + session.status()
-                + " · Matriculados: " + enrolled);
-        l2.setWrapText(true);
-        var btn = new Button("Ir a detalle");
-        btn.setOnAction(e -> onDetail.accept(session));
-        box.getChildren().addAll(l1, l2, btn);
+    private VBox createEmptyState(String message) {
+        VBox box = new VBox(8);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(32, 16, 32, 16));
+
+        Label label = new Label(message);
+        label.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748B;");
+
+        box.getChildren().add(label);
         return box;
     }
 }
