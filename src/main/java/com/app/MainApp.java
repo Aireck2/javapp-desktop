@@ -60,7 +60,6 @@ public class MainApp extends Application {
         }));
 
     // Envoltorio Mobile-First
-    // MobileViewWrapper mobileWrapper = new MobileViewWrapper(rootContent);
 
     Scene scene = new Scene(rootContent, 1280, 720);
     stage.setScene(scene);

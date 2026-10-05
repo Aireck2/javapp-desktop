@@ -3,7 +3,6 @@ package com.app.layout;
 import java.util.function.Consumer;
 
 import com.app.api.ApiClient;
-import com.app.attendance.CourseDetailView;
 import com.app.attendance.MyCoursesView;
 import com.app.components.BottomNavBar;
 import com.app.dashboard.StudentDashboardView;
@@ -95,24 +94,15 @@ public class MainShell extends SharedPortalShell {
 
     private void registerInnerRoutes() {
         innerRouter.registerView("courses", data -> {
-            Consumer<com.app.api.dto.ClassSession> goToDetail = cls -> innerRouter.navigateTo("course-detail", cls);
-            Consumer<com.app.api.dto.ClassSession> goToAttendance = cls -> innerRouter.navigateTo("take-attendance",
-                    cls);
-            return new MyCoursesView(api, goToDetail, goToAttendance);
+            Consumer<com.app.api.dto.ClassSession> openAttendance = cls -> innerRouter.navigateTo("attendance-detail", cls);
+            return new MyCoursesView(api, openAttendance, openAttendance);
         });
 
-        innerRouter.registerView("course-detail", data -> {
-            if (data instanceof com.app.api.dto.ClassSession cls) {
-                return new CourseDetailView(api, cls, innerRouter::goBack);
-            }
-            return new Label("Sesión no especificada");
-        });
-
-        innerRouter.registerView("take-attendance", data -> {
+        innerRouter.registerView("attendance-detail", data -> {
             if (data instanceof com.app.api.dto.ClassSession session) {
                 return new AttendanceDetailView(api, session, innerRouter::goBack);
             }
-            return new Label("Selecciona una sesión desde Mis cursos.");
+            return new Label("Selecciona un curso desde Mis cursos.");
         });
         innerRouter.registerView("student-dashboard", data -> {
             UserSession session = UserSession.getInstance();
