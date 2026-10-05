@@ -6,7 +6,6 @@ import com.app.api.dto.ClassSession;
 import com.app.api.dto.Course;
 import com.app.api.dto.Student;
 import com.app.api.dto.StudentSummary;
-import com.app.common.AttendanceExport;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -26,12 +25,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 /**
  * Teacher role view 2 — "Curso {name}": course header + roster with % and risk
  * semaphore per row, N checkboxes per hour (checked=present), save → DICTADA
- * (US-08), draft autosave US-09 and xlsx export US-14. Future session →
+ * (US-08), draft autosave US-09. Future session →
  * read-only.
  */
 public class CourseDetailView extends VBox {
@@ -165,31 +163,8 @@ public class CourseDetailView extends VBox {
             }
         });
 
-        var btnExport = new Button("Exportar Listado a Excel (.xlsx)");
-        btnExport.setOnAction(e -> {
-            var fc = new FileChooser();
-            fc.setInitialFileName("asistencia-" + course.code() + ".xlsx");
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel", "*.xlsx"));
-            var file = fc.showSaveDialog(getScene() != null ? getScene().getWindow() : null);
-            if (file == null) {
-                return;
-            }
-            try {
-                List<ClassSession> sessions = api.validSessions(course.id());
-                List<AttendanceExport.StudentRow> exportRows = new ArrayList<>();
-                for (Student student : api.studentsByCourse(course.id())) {
-                    StudentSummary summary = api.studentSummary(course.id(), student.id());
-                    exportRows.add(new AttendanceExport.StudentRow(
-                            student.code(), student.fullName(), summary.attendedHours(), summary.missedHours(),
-                            summary.percentage(), summary.risk().name()));
-                }
-                AttendanceExport.exportMatriz(course.code(), sessions, exportRows, file);
-                status.setText("Exportado a " + file.getName() + " (US-14).");
-            } catch (Exception ex) {
-                new Alert(Alert.AlertType.ERROR, "Export falló: " + ex.getMessage()).showAndWait();
-            }
-        });
-        actions.getChildren().addAll(save, btnExport);
+        actions.getChildren().add(save);
+
 
         getChildren().addAll(top, header, notice, scroll, actions, status);
     }
