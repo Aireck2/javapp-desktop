@@ -37,21 +37,21 @@ public final class StudentAttendanceModels {
             if (marks == null) {
                 marks = savedMarks.get(student.id());
             }
+            if (marks != null && marks.length != blockHours) {
+                throw new ApiException(ApiException.Kind.VALIDATION,
+                        "Las marcas guardadas no coinciden con las horas de la sesión.");
+            }
             List<StudentAttendanceModel.HourBlock> blocks = new ArrayList<>(blockHours);
             for (int hour = 0; hour < blockHours; hour++) {
-                boolean checked = marks != null && hour < marks.length ? marks[hour] : true;
+                boolean checked = marks == null || marks[hour];
                 blocks.add(new StudentAttendanceModel.HourBlock(times.get(hour), checked));
             }
 
-            long presentBlocks = blocks.stream().filter(StudentAttendanceModel.HourBlock::isChecked).count();
-            String badge = exempt ? "Exento RR-04"
-                    : presentBlocks == blocks.size() ? "Presente Completo"
-                    : presentBlocks == 0 ? "Falta Total" : "Parcial (" + presentBlocks + "h / " + blockHours + "h)";
             String note = exempt ? "Exonerado/a · " + Math.round(summary.exemptHours()) + " h no computables" : null;
             int attendancePercent = (int) Math.round(summary.percentage());
             int absencePercent = Math.max(0, 100 - attendancePercent);
             models.add(new StudentAttendanceModel(
-                    String.format("%02d", i + 1), student.id(), student.fullName(), student.code(), badge, blocks,
+                    String.format("%02d", i + 1), student.id(), student.fullName(), student.code(), blocks,
                     (int) Math.round(summary.taughtHours()), (int) Math.round(summary.attendedHours()),
                     (int) Math.round(summary.missedHours()), attendancePercent, absencePercent, note));
         }

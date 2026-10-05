@@ -50,6 +50,7 @@ public class MockApiClient implements ApiClient {
     // studentId -> (sessionId -> attended hours)
     private final Map<String, Map<String, Integer>> attended = new ConcurrentHashMap<>();
     private final Map<String, Map<String, boolean[]>> attendanceBySession = new ConcurrentHashMap<>();
+    private final Map<String, String> observationsBySession = new ConcurrentHashMap<>();
     // studentId -> (courseId -> excused / late-enrollment exempt hours)
     private final Map<String, Map<String, Integer>> excused = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Integer>> exempt = new ConcurrentHashMap<>();
@@ -204,6 +205,11 @@ public class MockApiClient implements ApiClient {
         return copy;
     }
 
+    @Override
+    public String attendanceObservation(String sessionId) {
+        return observationsBySession.getOrDefault(sessionId, "");
+    }
+
     /** Fixtures/tests only: sets excused/exempt hours per student+course. */
     void setExcused(String studentId, String courseId, int hours) {
         excused.computeIfAbsent(studentId, k -> new ConcurrentHashMap<>()).put(courseId, hours);
@@ -218,7 +224,10 @@ public class MockApiClient implements ApiClient {
     }
 
     @Override
-    public void saveAttendance(String sessionId, Map<String, boolean[]> attendanceByStudent) {
+    public void saveAttendance(
+            String sessionId,
+            Map<String, boolean[]> attendanceByStudent,
+            String observation) {
         ClassSession s = sessions.get(sessionId);
         if (s == null) {
             throw new ApiException(ApiException.Kind.NOT_FOUND, "Sesión no encontrada");
@@ -247,6 +256,7 @@ public class MockApiClient implements ApiClient {
         Map<String, boolean[]> copiedMarks = new HashMap<>();
         attendanceByStudent.forEach((studentId, marks) -> copiedMarks.put(studentId, marks.clone()));
         attendanceBySession.put(sessionId, copiedMarks);
+        observationsBySession.put(sessionId, observation == null ? "" : observation);
         // US-08 CA4: saving moves the session to DICTADA
         sessions.put(sessionId,
                 new ClassSession(s.id(), s.courseId(), s.date(), s.blockHours(), SessionStatus.DICTADA));

@@ -44,15 +44,24 @@ public interface ApiClient {
 
   StudentSummary studentSummary(String courseId, String studentId) throws ApiException;
 
-  /** Returns the saved per-hour marks for a session, when it has already been recorded. */
-  default Map<String, boolean[]> attendanceForSession(String sessionId) throws ApiException {
-    return Map.of();
-  }
+  /** Returns saved per-hour marks for a session, when it has already been recorded. */
+  Map<String, boolean[]> attendanceForSession(String sessionId) throws ApiException;
+
+  /** Returns the general observation saved with a session's attendance. */
+  String attendanceObservation(String sessionId) throws ApiException;
 
   /**
    * Saves attendance. {@code attendanceByStudent}: studentId → N-boolean array
    * (one per teaching hour of the block; true = present).
    * On save the session moves to DICTADA (US-08 CA4).
    */
-  void saveAttendance(String sessionId, Map<String, boolean[]> attendanceByStudent) throws ApiException;
+  default void saveAttendance(String sessionId, Map<String, boolean[]> attendanceByStudent) throws ApiException {
+    saveAttendance(sessionId, attendanceByStudent, "");
+  }
+
+  /** Saves attendance marks and the session observation in one operation. */
+  void saveAttendance(
+      String sessionId,
+      Map<String, boolean[]> attendanceByStudent,
+      String observation) throws ApiException;
 }

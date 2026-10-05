@@ -48,7 +48,7 @@ public class AttendanceDetailView extends VBox {
   private final ApiClient api;
   private final ClassSession session;
   private final Course course;
-  private final List<StudentAttendanceModel> students;
+  private List<StudentAttendanceModel> students;
   private final VBox studentList = new VBox(10);
   private HBox filterBar;
   private final TextField searchField = new TextField();
@@ -58,7 +58,8 @@ public class AttendanceDetailView extends VBox {
   private final Label exemptValue = new Label("0");
   private final Label status = new Label();
   private final TextArea observation = new TextArea();
-  private final boolean editable;
+  private boolean editable;
+  private boolean loadFailed;
   private Filter activeFilter = Filter.ALL;
   private Timeline autosave;
   private boolean dirty;
@@ -67,7 +68,8 @@ public class AttendanceDetailView extends VBox {
     this.api = api;
     this.session = session;
     this.course = findCourse(api, session.courseId());
-    this.editable = !session.date().isAfter(LocalDate.now());
+    this.editable = !session.date().isAfter(LocalDate.now())
+        && !session.date().isBefore(LocalDate.now().minusDays(60));
 
     Draft draft = DRAFTS.get(session.id());
     Map<String, boolean[]> draftMarks = draft != null && draft.date().equals(LocalDate.now())
@@ -78,14 +80,19 @@ public class AttendanceDetailView extends VBox {
     }
     List<StudentAttendanceModel> loadedStudents;
     try {
+      Map<String, boolean[]> savedMarks = api.attendanceForSession(session.id());
+      String savedObservation = api.attendanceObservation(session.id());
       loadedStudents = StudentAttendanceModels.load(
-          api, course, session.blockHours(), safeSavedMarks(), draftMarks);
+          api, course, session.blockHours(), savedMarks, draftMarks);
+      observation.setText(savedObservation == null ? "" : savedObservation);
     } catch (ApiException exception) {
       loadedStudents = List.of();
-      status.setText("No se pudo cargar la nómina: " + exception.getMessage());
+      this.editable = false;
+      this.loadFailed = true;
+      status.setText("No se pudieron cargar los datos de asistencia. Sesión en solo lectura: " + exception.getMessage());
     }
     this.students = loadedStudents;
-    if (draft != null && draft.date().equals(LocalDate.now())) {
+    if (!loadFailed && draft != null && draft.date().equals(LocalDate.now())) {
       observation.setText(draft.observation());
     }
 
@@ -104,10 +111,11 @@ public class AttendanceDetailView extends VBox {
         createFooter());
 
     searchField.textProperty().addListener((observable, oldValue, newValue) -> refreshStudentList());
+    observation.setEditable(editable);
     observation.textProperty().addListener((observable, oldValue, newValue) -> dirty = true);
     refreshStudentList();
     updateSummary();
-    if (draft != null && draft.date().equals(LocalDate.now())) {
+    if (!loadFailed && draft != null && draft.date().equals(LocalDate.now())) {
       status.setText("Borrador de hoy recuperado.");
     }
     startAutosave();
@@ -121,15 +129,6 @@ public class AttendanceDetailView extends VBox {
           .orElseGet(() -> new Course(courseId, courseId, courseId, 0));
     } catch (ApiException exception) {
       return new Course(courseId, courseId, courseId, 0);
-    }
-  }
-
-  private Map<String, boolean[]> safeSavedMarks() {
-    try {
-      return api.attendanceForSession(session.id());
-    } catch (ApiException exception) {
-      status.setText("No se pudieron cargar las marcas guardadas: " + exception.getMessage());
-      return Map.of();
     }
   }
 
@@ -156,7 +155,8 @@ public class AttendanceDetailView extends VBox {
     Label details = new Label(session.date() + " · " + session.blockHours() + " horas · " + course.schedule());
     details.setWrapText(true);
     details.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;");
-    Label sessionState = new Label(editable ? "Registro de asistencia" : "Sesión futura · solo lectura");
+    Label sessionState = new Label(loadFailed ? "Error de carga · solo lectura"
+        : editable ? "Registro de asistencia" : "Solo lectura · fuera del período de registro");
     sessionState.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748B;");
     box.getChildren().addAll(back, courseCode, title, details, sessionState);
     return box;
@@ -339,17 +339,26 @@ public class AttendanceDetailView extends VBox {
   }
 
   private void submitAttendance() {
-    if (session.date().isAfter(LocalDate.now())) {
-      new Alert(Alert.AlertType.ERROR, "No se permite registrar asistencia en fechas futuras.").showAndWait();
+    if (!editable || loadFailed) {
+      new Alert(Alert.AlertType.ERROR, "Esta sesión no se puede editar.").showAndWait();
       return;
     }
     try {
-      api.saveAttendance(session.id(), snapshot());
+      api.saveAttendance(session.id(), snapshot(), observation.getText());
       DRAFTS.remove(session.id());
       if (autosave != null)
         autosave.stop();
+      dirty = false;
       status.setText("Asistencia registrada " + LocalDateTime.now()
           .format(DateTimeFormatter.ofPattern("HH:mm:ss")) + ". Sesión actualizada a DICTADA.");
+      try {
+        students = StudentAttendanceModels.load(api, course, session.blockHours(),
+            api.attendanceForSession(session.id()), Map.of());
+        refreshStudentList();
+        updateSummary();
+      } catch (ApiException refreshException) {
+        status.setText(status.getText() + " No se pudo actualizar el resumen: " + refreshException.getMessage());
+      }
     } catch (ApiException exception) {
       new Alert(Alert.AlertType.ERROR, exception.getMessage()).showAndWait();
     }
@@ -357,7 +366,8 @@ public class AttendanceDetailView extends VBox {
 
   private Map<String, boolean[]> snapshot() {
     Map<String, boolean[]> marks = new HashMap<>();
-    students.forEach(student -> marks.put(student.id(), student.attendanceMarks()));
+    students.stream().filter(student -> !student.isExempt())
+        .forEach(student -> marks.put(student.id(), student.attendanceMarks()));
     return marks;
   }
 

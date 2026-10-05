@@ -9,7 +9,6 @@ public final class StudentAttendanceModel {
     private final String id;
     private final String name;
     private final String code;
-    private final String statusBadge;
     private final List<HourBlock> blocks;
     private final int prog;
     private final int pres;
@@ -23,7 +22,6 @@ public final class StudentAttendanceModel {
             String id,
             String name,
             String code,
-            String statusBadge,
             List<HourBlock> blocks,
             int prog,
             int pres,
@@ -35,7 +33,6 @@ public final class StudentAttendanceModel {
         this.id = id;
         this.name = name;
         this.code = code;
-        this.statusBadge = statusBadge;
         this.blocks = List.copyOf(blocks);
         this.prog = prog;
         this.pres = pres;
@@ -49,7 +46,6 @@ public final class StudentAttendanceModel {
     public String id() { return id; }
     public String name() { return name; }
     public String code() { return code; }
-    public String statusBadge() { return statusBadge; }
     public List<HourBlock> blocks() { return blocks; }
     public int prog() { return prog; }
     public int pres() { return pres; }
