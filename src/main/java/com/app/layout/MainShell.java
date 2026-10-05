@@ -3,14 +3,13 @@ package com.app.layout;
 import java.util.function.Consumer;
 
 import com.app.api.ApiClient;
-import com.app.attendance.AttendanceMatrixView;
 import com.app.attendance.CourseDetailView;
 import com.app.attendance.MyCoursesView;
-import com.app.attendance.TakeAttendanceView;
 import com.app.components.BottomNavBar;
 import com.app.dashboard.StudentDashboardView;
 import com.app.navigation.ScreenRouter;
 import com.app.session.UserSession;
+import com.app.views.AttendanceDetailView;
 import com.app.views.ProfileView;
 
 import javafx.scene.control.Label;
@@ -67,6 +66,8 @@ public class MainShell extends SharedPortalShell {
             case ATTENDANCE -> {
                 if (isDocente) {
                     innerRouter.navigateTo("courses");
+                } else if (isAdmin) {
+                    innerRouter.navigateTo("courses");
                 } else if (isAlumno) {
                     innerRouter.navigateTo("student-dashboard");
                 } else {
@@ -107,8 +108,12 @@ public class MainShell extends SharedPortalShell {
             return new Label("Sesión no especificada");
         });
 
-        innerRouter.registerView("take-attendance", data -> new TakeAttendanceView(api));
-        innerRouter.registerView("matrix", data -> new AttendanceMatrixView(api));
+        innerRouter.registerView("take-attendance", data -> {
+            if (data instanceof com.app.api.dto.ClassSession session) {
+                return new AttendanceDetailView(api, session, innerRouter::goBack);
+            }
+            return new Label("Selecciona una sesión desde Mis cursos.");
+        });
         innerRouter.registerView("student-dashboard", data -> {
             UserSession session = UserSession.getInstance();
             String studentId = session.getUsername() != null && !session.getUsername().isBlank()
@@ -128,7 +133,7 @@ public class MainShell extends SharedPortalShell {
             innerRouter.navigateTo("student-dashboard");
             getBottomNavBar().setActiveTab(BottomNavBar.TabItem.ATTENDANCE);
         } else {
-            innerRouter.navigateTo("take-attendance");
+            innerRouter.navigateTo("courses");
             getBottomNavBar().setActiveTab(BottomNavBar.TabItem.ATTENDANCE);
         }
     }
