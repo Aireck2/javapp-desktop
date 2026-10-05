@@ -49,6 +49,7 @@ public class MockApiClient implements ApiClient {
     private final Map<String, ClassSession> sessions = new ConcurrentHashMap<>();
     // studentId -> (sessionId -> attended hours)
     private final Map<String, Map<String, Integer>> attended = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, boolean[]>> attendanceBySession = new ConcurrentHashMap<>();
     // studentId -> (courseId -> excused / late-enrollment exempt hours)
     private final Map<String, Map<String, Integer>> excused = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Integer>> exempt = new ConcurrentHashMap<>();
@@ -195,6 +196,14 @@ public class MockApiClient implements ApiClient {
                 BrCalculations.remainingHours(missed, margin), risk);
     }
 
+    @Override
+    public Map<String, boolean[]> attendanceForSession(String sessionId) {
+        Map<String, boolean[]> saved = attendanceBySession.getOrDefault(sessionId, Map.of());
+        Map<String, boolean[]> copy = new HashMap<>();
+        saved.forEach((studentId, marks) -> copy.put(studentId, marks.clone()));
+        return copy;
+    }
+
     /** Fixtures/tests only: sets excused/exempt hours per student+course. */
     void setExcused(String studentId, String courseId, int hours) {
         excused.computeIfAbsent(studentId, k -> new ConcurrentHashMap<>()).put(courseId, hours);
@@ -235,6 +244,9 @@ public class MockApiClient implements ApiClient {
             }
             attended.computeIfAbsent(e.getKey(), k -> new ConcurrentHashMap<>()).put(sessionId, count);
         }
+        Map<String, boolean[]> copiedMarks = new HashMap<>();
+        attendanceByStudent.forEach((studentId, marks) -> copiedMarks.put(studentId, marks.clone()));
+        attendanceBySession.put(sessionId, copiedMarks);
         // US-08 CA4: saving moves the session to DICTADA
         sessions.put(sessionId,
                 new ClassSession(s.id(), s.courseId(), s.date(), s.blockHours(), SessionStatus.DICTADA));
