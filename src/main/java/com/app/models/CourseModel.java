@@ -24,7 +24,7 @@ public record CourseModel(
         section = section == null ? "" : section;
         name = name == null ? "" : name;
         schedule = schedule == null ? "" : schedule;
-        classroom = classroom == null ? "Aula General" : classroom;
+        classroom = classroom == null ? "Aula no especificada" : classroom;
         badgeType = badgeType == null ? "Regular" : badgeType;
         enrolledStudents = Math.max(0, enrolledStudents);
         completedHours = Math.max(0, completedHours);

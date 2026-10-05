@@ -3,6 +3,7 @@ package com.app.attendance;
 import com.app.api.ApiClient;
 import com.app.api.ApiException;
 import com.app.api.dto.ClassSession;
+import com.app.api.dto.ClassSession.SessionStatus;
 import com.app.api.dto.Course;
 import com.app.components.CourseCard;
 import com.app.mappers.CourseModelMapper;
@@ -29,7 +30,7 @@ import javafx.scene.layout.VBox;
 public class MyCoursesView extends VBox {
 
     private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("EEEE dd/MM", new Locale("es"));
+            DateTimeFormatter.ofPattern("EEEE dd/MM", Locale.forLanguageTag("es"));
 
     private final ApiClient api;
     private final Consumer<ClassSession> onDetail;
@@ -76,11 +77,17 @@ public class MyCoursesView extends VBox {
 
             // Cache de alumnos matriculados por curso
             Map<String, Integer> enrolledMap = new HashMap<>();
+            Map<String, Integer> completedHoursMap = new HashMap<>();
             for (Course c : coursesList) {
                 try {
                     enrolledMap.put(c.id(), api.studentsByCourse(c.id()).size());
+                    completedHoursMap.put(c.id(), api.validSessions(c.id()).stream()
+                            .filter(session -> session.status() == SessionStatus.DICTADA)
+                            .mapToInt(ClassSession::blockHours)
+                            .sum());
                 } catch (ApiException ignored) {
                     enrolledMap.put(c.id(), 0);
+                    completedHoursMap.put(c.id(), 0);
                 }
             }
 
@@ -112,7 +119,7 @@ public class MyCoursesView extends VBox {
                     for (ClassSession session : daySessions) {
                         Course course = coursesMap.get(session.courseId());
                         int enrolled = enrolledMap.getOrDefault(session.courseId(), 0);
-                        int completedHours = session.blockHours() * 4; // Horas estimadas/acumuladas
+                        int completedHours = completedHoursMap.getOrDefault(session.courseId(), 0);
 
                         CourseModel model = CourseModelMapper.toModel(course, session, enrolled, completedHours);
 
@@ -143,7 +150,7 @@ public class MyCoursesView extends VBox {
     private static String formatSectionTitle(LocalDate date, boolean isToday) {
         String base = date.format(DATE_FORMATTER);
         if (base != null && !base.isEmpty()) {
-            base = base.substring(0, 1).toUpperCase(new Locale("es")) + base.substring(1);
+            base = base.substring(0, 1).toUpperCase(Locale.forLanguageTag("es")) + base.substring(1);
         }
         return (isToday ? "📌 HOY · " : "📅 ") + base;
     }

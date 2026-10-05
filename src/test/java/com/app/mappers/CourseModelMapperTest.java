@@ -39,7 +39,7 @@ class CourseModelMapperTest {
         CourseModel model = CourseModelMapper.toModel(course, session, 20, 10);
 
         assertThat(model.badgeType()).isEqualTo("Laboratorio");
-        assertThat(model.classroom()).isEqualTo("Lab-204");
+        assertThat(model.classroom()).isEqualTo("Aula no especificada");
     }
 
     @Test

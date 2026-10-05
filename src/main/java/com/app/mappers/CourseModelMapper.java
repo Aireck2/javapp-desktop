@@ -37,7 +37,7 @@ public final class CourseModelMapper {
         int totalHours = course != null && course.totalHours() > 0 ? course.totalHours() : 40;
 
         String badgeType = resolveBadgeType(course, session);
-        String classroom = resolveClassroom(course, session);
+        String classroom = resolveClassroom();
 
         return new CourseModel(
                 id,
@@ -66,10 +66,7 @@ public final class CourseModelMapper {
         return "Teoría";
     }
 
-    private static String resolveClassroom(Course course, ClassSession session) {
-        if (course != null && course.name() != null && course.name().toUpperCase().contains("LAB")) {
-            return "Lab-204";
-        }
-        return "Aula 302";
+    private static String resolveClassroom() {
+        return "Aula no especificada";
     }
 }
