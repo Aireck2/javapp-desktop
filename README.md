@@ -105,10 +105,12 @@ To create an installer locally, use JDK 21 on the target platform:
 
 ```bash
 ./gradlew jpackageDmg  # macOS
-./gradlew jpackageExe  # Windows
+./gradlew jpackageExe  # Windows EXE
+./gradlew jpackageMsi  # Windows MSI (optional)
 ```
 
 Installers are written to `build/jpackage/`.
+Windows installers must be built on Windows with JDK 21 and WiX Toolset 3.0 or later installed.
 
 ## Troubleshooting
 
