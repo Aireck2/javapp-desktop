@@ -67,7 +67,7 @@ tasks.check {
     dependsOn(tasks.jacocoTestReport)
 }
 
-// jpackage manual (requiere ./gradlew build primero).
+// jpackage manual (requiere JDK 21 en la plataforma de destino).
 // macOS: ./gradlew jpackageDmg | Windows: ./gradlew jpackageExe
 fun jpackageTask(name: String, type: String): TaskProvider<Exec> =
     tasks.register<Exec>(name) {
@@ -79,21 +79,59 @@ fun jpackageTask(name: String, type: String): TaskProvider<Exec> =
             .split(".").mapIndexed { i, p -> if (i == 0) p.toIntOrNull()?.coerceAtLeast(1)?.toString() ?: "1" else p }
             .joinToString(".").ifBlank { "1.0.0" }
         val jarTask = tasks.named<Jar>("jar")
+        val stagingDir = layout.buildDirectory.dir("jpackage-input").get().asFile
+        val macIcon = file("src/main/resources/images/macos/icon-1024x1024px.icns")
+        val windowsIcon = file("src/main/resources/images/windows/icon-256x256px.ico")
+        val runtimeModules = listOf(
+            "java.se", "jdk.crypto.ec", "jdk.jfr", "javafx.base", "javafx.graphics",
+            "javafx.controls", "javafx.fxml"
+        )
+        val javafxModulePath = configurations.runtimeClasspath.get().files
+            .filter { it.name.startsWith("javafx-") && it.extension == "jar" }
+            .joinToString(File.pathSeparator) { File(stagingDir, it.name).absolutePath }
+
+        doFirst {
+            stagingDir.deleteRecursively()
+            stagingDir.mkdirs()
+            copy {
+                from(jarTask.get().archiveFile)
+                from(configurations.runtimeClasspath)
+                into(stagingDir)
+            }
+        }
         doFirst {
             logger.lifecycle("jpackage $type — app $appVersion (mock MVP, sin backend real)")
         }
-        commandLine(
-            "jpackage",
+        val jpackageArgs = mutableListOf(
             "--name", "JavappDesktop",
             "--app-version", appVersion,
-            "--input", jarTask.get().destinationDirectory.get().asFile.absolutePath,
+            "--vendor", "Javapp",
+            "--input", stagingDir.absolutePath,
             "--main-jar", jarTask.get().archiveFileName.get(),
             "--main-class", "com.app.MainApp",
+            "--module-path", javafxModulePath,
+            "--add-modules", runtimeModules.joinToString(","),
             "--type", type,
             "--dest", layout.buildDirectory.dir("jpackage").get().asFile.absolutePath,
             "--java-options", "-Xmx512m"
         )
+        if (type == "dmg") {
+            jpackageArgs.addAll(listOf(
+                "--icon", macIcon.absolutePath,
+                "--mac-package-identifier", "com.app.javappdesktop"
+            ))
+        } else if (type == "exe" || type == "msi") {
+            jpackageArgs.addAll(listOf(
+                "--icon", windowsIcon.absolutePath,
+                "--win-menu",
+                "--win-menu-group", "Javapp",
+                "--win-shortcut",
+                "--win-per-user-install"
+            ))
+        }
+        commandLine("jpackage", *jpackageArgs.toTypedArray())
     }
 
 jpackageTask("jpackageDmg", "dmg")
-jpackageTask("jpackageExe", "exe-msi")
+jpackageTask("jpackageExe", "exe")
+jpackageTask("jpackageMsi", "msi")

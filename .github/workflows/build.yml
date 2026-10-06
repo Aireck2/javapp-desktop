@@ -22,7 +22,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: ./gradlew jpackageDmg
-      - name: jpackage EXE-MSI (Windows)
+      - name: jpackage EXE (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: ./gradlew jpackageExe
