@@ -11,7 +11,7 @@
 ![JavaFX 21](https://img.shields.io/badge/JavaFX-21-5382a1?style=flat-square)
 ![macOS and Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=flat-square)
 
-[Features](#features) · [Run locally](#run-locally) · [Configuration](#configuration) · [Development](#development) · [Project structure](#project-structure)
+[Features](#features) · [Demo accounts](#demo-accounts) · [Run locally](#run-locally) · [Configuration](#configuration) · [Development](#development) · [Project structure](#project-structure)
 
 </div>
 
@@ -22,12 +22,12 @@ Javapp Desktop is a JavaFX application for academic attendance workflows. It pro
 
 ## Features
 
-- **Sign in and session restore:** splash screen checks a saved refresh token; login supports a “remember me” option and inactivity logout.
+- **Sign in and session restore:** splash screen checks a saved mock refresh token; login supports “remember me” and automatic logout after inactivity.
 - **Course timeline:** administrators and teachers see sessions grouped by day, from today through the next five days.
-- **Attendance entry:** mark students by teaching hour, search and filter the roster, apply bulk marks, add an observation, and submit attendance.
+- **Attendance entry:** mark students by teaching hour, search and filter the roster, apply bulk marks, add an observation, and submit attendance. Past sessions outside the editable 60-day window and future sessions are read-only.
 - **Draft recovery:** unsaved attendance is saved in memory every 60 seconds and can be restored later the same day. Drafts are lost when the app closes.
-- **Student dashboard:** view course attendance, remaining absence allowance, and risk level.
-- **Profile:** view the signed-in user’s name, username, and roles.
+- **Student dashboard:** review attendance by course, absence allowance, remaining hours, and risk level.
+- **Profile and account menu:** view the signed-in user’s name, username, and roles; open the avatar menu in the shared header to sign out.
 - **FXML and CSS UI:** screens and shared portal components use FXML layouts with a shared application stylesheet.
 
 ## Demo accounts
@@ -40,7 +40,7 @@ Use password `demo` with any of these accounts:
 | `docente` | Teacher | Course timeline |
 | `alumno` | Student | Attendance dashboard |
 
-The mock data is for local demonstration only; it does not enforce production authorization or persist attendance across app restarts.
+The mock data is for local demonstration only. It does not enforce production authorization or persist attendance across app restarts. “Remember me” stores the mock refresh token in the operating system preferences store; it does not connect the app to a production identity provider.
 
 ## Run locally
 
@@ -113,15 +113,17 @@ src/main/java/com/app/
 ├── config/              # Application configuration
 ├── features/            # Auth, courses, attendance, dashboard, and profile flows
 ├── layout/              # Shared shell and role-based navigation
-├── mappers/              # API DTO to presentation-model mapping
-├── models/               # UI presentation models
-├── navigation/           # Screen router and lifecycle hooks
-└── shared/               # FXML loading support
+├── mappers/             # API DTO to presentation-model mapping
+├── models/              # UI presentation models
+├── navigation/          # Screen router and lifecycle hooks
+└── shared/              # FXML loading support
 
 src/main/resources/com/app/
-├── css/                  # Application theme
-├── features/             # Feature screen FXML
+├── css/                 # Application theme
+├── features/            # Feature screen FXML
 └── shared/components/    # Shared shell, header, and navigation FXML
+
+docs/                     # Feature specifications and project notes
 ```
 
 ## Troubleshooting
