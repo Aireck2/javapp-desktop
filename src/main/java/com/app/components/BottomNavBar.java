@@ -4,6 +4,8 @@ import com.app.shared.fxml.FxmlViewLoader;
 import java.util.function.Consumer;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -41,8 +43,20 @@ public class BottomNavBar extends HBox {
     attendanceLabel.setText(isTeacher ? "Mis cursos" : "Inicio");
     attendanceIconPlaceholder.setGraphic(new FontIcon(Feather.BOOK_OPEN));
     profileIconPlaceholder.setGraphic(new FontIcon(Feather.USER));
-    attendanceItem.setOnMouseClicked(e -> select(TabItem.ATTENDANCE));
-    profileItem.setOnMouseClicked(e -> select(TabItem.PROFILE));
+    attendanceItem.addEventFilter(
+        MouseEvent.MOUSE_CLICKED,
+        event -> {
+          if (event.getButton() == MouseButton.PRIMARY) {
+            select(TabItem.ATTENDANCE);
+          }
+        });
+    profileItem.addEventFilter(
+        MouseEvent.MOUSE_CLICKED,
+        event -> {
+          if (event.getButton() == MouseButton.PRIMARY) {
+            select(TabItem.PROFILE);
+          }
+        });
     updateActiveState();
   }
 

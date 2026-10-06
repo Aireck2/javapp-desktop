@@ -1,7 +1,6 @@
 package com.app;
 
-import java.time.Duration;
-
+import atlantafx.base.theme.PrimerLight;
 import com.app.api.ApiClient;
 import com.app.api.MockApiClient;
 import com.app.auth.TokenStore;
@@ -11,8 +10,7 @@ import com.app.features.auth.LoginScreen;
 import com.app.features.auth.SplashScreen;
 import com.app.layout.MainShell;
 import com.app.navigation.ScreenRouter;
-
-import atlantafx.base.theme.PrimerLight;
+import java.time.Duration;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -43,23 +41,25 @@ public class MainApp extends Application {
     // Registro de rutas globales
     router.registerView(
         "splash",
-        data -> new SplashScreen(
-            API,
-            TOKENS,
-            tokens -> router.navigateTo("main"),
-            () -> router.navigateTo("login")));
+        data ->
+            new SplashScreen(
+                API,
+                TOKENS,
+                tokens -> router.navigateTo("main"),
+                () -> router.navigateTo("login")));
 
     router.registerView(
         "login", data -> new LoginScreen(API, TOKENS, tokens -> router.navigateTo("main")));
 
     router.registerView(
         "main",
-        data -> new MainShell(
-            API,
-            () -> {
-              TOKENS.clear();
-              router.navigateTo("login");
-            }));
+        data ->
+            new MainShell(
+                API,
+                () -> {
+                  TOKENS.clear();
+                  router.navigateTo("login");
+                }));
 
     // Envoltorio Mobile-First
 
@@ -77,25 +77,23 @@ public class MainApp extends Application {
     stage.show();
   }
 
-  /**
-   * Vigila la inactividad del usuario (15 min por defecto) y cierra la sesión
-   * automáticamente.
-   */
+  /** Vigila la inactividad del usuario (15 min por defecto) y cierra la sesión automáticamente. */
   private void watchInactivity(Stage stage) {
-    Timeline timer = new Timeline(
-        new KeyFrame(
-            javafx.util.Duration.seconds(60),
-            e -> {
-              UserSession session = UserSession.getInstance();
-              if (session.isLoggedIn()
-                  && session.isInactive(Duration.ofMinutes(AppConfig.inactivityMinutes()))) {
-                session.logout();
-                TOKENS.clear();
-                if (router != null) {
-                  router.navigateTo("login");
-                }
-              }
-            }));
+    Timeline timer =
+        new Timeline(
+            new KeyFrame(
+                javafx.util.Duration.seconds(60),
+                e -> {
+                  UserSession session = UserSession.getInstance();
+                  if (session.isLoggedIn()
+                      && session.isInactive(Duration.ofMinutes(AppConfig.inactivityMinutes()))) {
+                    session.logout();
+                    TOKENS.clear();
+                    if (router != null) {
+                      router.navigateTo("login");
+                    }
+                  }
+                }));
     timer.setCycleCount(Timeline.INDEFINITE);
     timer.play();
 

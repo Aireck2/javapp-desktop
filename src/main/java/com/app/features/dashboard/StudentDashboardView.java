@@ -13,6 +13,6 @@ public final class StudentDashboardView extends VBox {
     FxmlViewLoader.loadInto(
         this,
         "/com/app/features/dashboard/student-dashboard.fxml",
-        new StudentDashboardController(studentId, viewModel));
+        new StudentDashboardController(viewModel));
   }
 }

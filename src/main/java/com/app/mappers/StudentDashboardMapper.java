@@ -18,6 +18,7 @@ public final class StudentDashboardMapper {
         course.schedule(),
         summary.taughtHours(),
         summary.attendedHours(),
+        summary.missedHours(),
         summary.excusedHours(),
         summary.exemptHours(),
         summary.percentage(),

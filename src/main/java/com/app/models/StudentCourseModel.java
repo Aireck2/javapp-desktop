@@ -11,6 +11,7 @@ public record StudentCourseModel(
     String schedule,
     double taughtHours,
     double attendedHours,
+    double missedHours,
     double excusedHours,
     double exemptHours,
     double attendancePercentage,

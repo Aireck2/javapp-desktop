@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <fx:root
     type="VBox"
@@ -9,6 +10,26 @@
     spacing="16.0"
     styleClass="app-screen"
 >
-    <Label fx:id="studentTitle" styleClass="screen-title" wrapText="true" />
+    <VBox spacing="4.0">
+        <Label text="Mis Cursos" styleClass="screen-title" />
+        <Label
+            text="Monitorea tu margen reglamentario de inasistencias y estado de cursos."
+            styleClass="screen-subtitle"
+            wrapText="true"
+        />
+    </VBox>
+    <HBox
+        spacing="10.0"
+        alignment="CENTER_LEFT"
+        styleClass="student-course-info-banner"
+    >
+        <Label text="ⓘ" styleClass="student-course-info-icon" />
+        <Label
+            text="Límite reglamentario (DPI): máximo 30% de inasistencias permitidas en el ciclo."
+            styleClass="student-course-info-text"
+            wrapText="true"
+            HBox.hgrow="ALWAYS"
+        />
+    </HBox>
     <StackPane fx:id="stateContainer" styleClass="dashboard-state-container" />
 </fx:root>

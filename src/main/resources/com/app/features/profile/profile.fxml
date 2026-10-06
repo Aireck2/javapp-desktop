@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <VBox
     xmlns="http://javafx.com/javafx/21"
@@ -9,22 +12,100 @@
     styleClass="app-screen"
 >
     <Label text="Mi perfil" styleClass="screen-title" />
-    <VBox spacing="14.0" styleClass="profile-card">
-        <VBox spacing="4.0" styleClass="profile-field">
-            <Label text="Nombre" styleClass="profile-field-label" />
-            <Label fx:id="displayName" styleClass="profile-field-value" />
-        </VBox>
-        <VBox spacing="4.0" styleClass="profile-field">
-            <Label text="Usuario" styleClass="profile-field-label" />
-            <Label fx:id="username" styleClass="profile-field-value" />
-        </VBox>
-        <VBox spacing="4.0" styleClass="profile-field">
-            <Label text="Roles" styleClass="profile-field-label" />
+
+    <VBox spacing="14.0" styleClass="profile-hero-card">
+        <HBox alignment="CENTER_LEFT" spacing="14.0">
+            <StackPane styleClass="profile-avatar">
+                <Label
+                    fx:id="avatarInitials"
+                    styleClass="profile-avatar-initials"
+                />
+            </StackPane>
+            <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                <Label
+                    fx:id="displayName"
+                    styleClass="profile-hero-name"
+                    wrapText="true"
+                />
+                <Label
+                    fx:id="profileSubtitle"
+                    styleClass="profile-hero-subtitle"
+                />
+            </VBox>
+        </HBox>
+        <HBox
+            alignment="CENTER_LEFT"
+            spacing="8.0"
+            styleClass="profile-role-pill"
+        >
+            <Label text="●" styleClass="profile-role-dot" />
             <Label
                 fx:id="roles"
-                styleClass="profile-field-value"
+                styleClass="profile-role-text"
                 wrapText="true"
             />
-        </VBox>
+        </HBox>
+    </VBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="12.0">
+        <Label
+            text="IDENTIFICACIÓN Y ACCESO"
+            styleClass="profile-section-title"
+        />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="primaryRole" styleClass="profile-role-tag" />
+    </HBox>
+
+    <VBox spacing="0.0" styleClass="profile-details-card">
+        <HBox
+            alignment="CENTER_LEFT"
+            spacing="12.0"
+            styleClass="profile-detail-row"
+        >
+            <StackPane styleClass="profile-detail-icon-box">
+                <Label text="U" styleClass="profile-detail-icon" />
+            </StackPane>
+            <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                <Label
+                    text="Nombre de usuario"
+                    styleClass="profile-detail-label"
+                />
+                <Label
+                    fx:id="username"
+                    styleClass="profile-detail-value"
+                    wrapText="true"
+                />
+            </VBox>
+        </HBox>
+        <Region styleClass="profile-separator" />
+        <HBox
+            alignment="CENTER_LEFT"
+            spacing="12.0"
+            styleClass="profile-detail-row"
+        >
+            <StackPane styleClass="profile-detail-icon-box">
+                <Label text="♙" styleClass="profile-detail-icon" />
+            </StackPane>
+            <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                <Label
+                    text="Nombre completo"
+                    styleClass="profile-detail-label"
+                />
+                <Label
+                    fx:id="fullName"
+                    styleClass="profile-detail-value"
+                    wrapText="true"
+                />
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <VBox spacing="5.0" styleClass="profile-note">
+        <Label text="Tu cuenta" styleClass="profile-note-title" />
+        <Label
+            text="La información mostrada corresponde a los datos disponibles en tu sesión."
+            styleClass="profile-note-text"
+            wrapText="true"
+        />
     </VBox>
 </VBox>

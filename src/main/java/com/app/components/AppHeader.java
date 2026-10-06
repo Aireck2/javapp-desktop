@@ -2,6 +2,7 @@ package com.app.components;
 
 import com.app.shared.fxml.FxmlViewLoader;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -41,7 +42,32 @@ public class AppHeader extends HBox {
           }
         });
     ContextMenu avatarMenu = new ContextMenu(logoutItem);
+    avatarMenu.setOnShown(event -> keepMenuInsideWindow(avatarMenu));
     avatarButton.setOnAction(e -> avatarMenu.show(avatarButton, javafx.geometry.Side.BOTTOM, 0, 4));
+  }
+
+  private void keepMenuInsideWindow(ContextMenu menu) {
+    if (avatarButton.getScene() == null || menu.getWidth() <= 0 || menu.getHeight() <= 0) {
+      return;
+    }
+
+    Bounds windowBounds =
+        avatarButton
+            .getScene()
+            .getRoot()
+            .localToScreen(avatarButton.getScene().getRoot().getBoundsInLocal());
+    Bounds buttonBounds = avatarButton.localToScreen(avatarButton.getBoundsInLocal());
+    if (windowBounds == null || buttonBounds == null) {
+      return;
+    }
+
+    double maxX = Math.max(windowBounds.getMinX(), windowBounds.getMaxX() - menu.getWidth());
+    double maxY = Math.max(windowBounds.getMinY(), windowBounds.getMaxY() - menu.getHeight());
+    double x =
+        Math.max(windowBounds.getMinX(), Math.min(buttonBounds.getMaxX() - menu.getWidth(), maxX));
+    double y = Math.max(windowBounds.getMinY(), Math.min(buttonBounds.getMaxY() + 4, maxY));
+    menu.setX(x);
+    menu.setY(y);
   }
 
   public void setSubtitle(String subtitle) {
