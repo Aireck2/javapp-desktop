@@ -1,7 +1,5 @@
 package com.app.models;
 
-import java.util.Objects;
-
 /**
  * View Model inmutable para representar un curso en tarjetas y listas de la UI.
  * Desacoplado del protocolo de red / backend.
@@ -24,7 +22,7 @@ public record CourseModel(
         section = section == null ? "" : section;
         name = name == null ? "" : name;
         schedule = schedule == null ? "" : schedule;
-        classroom = classroom == null ? "Aula no especificada" : classroom;
+        classroom = classroom == null ? "Aula General" : classroom;
         badgeType = badgeType == null ? "Regular" : badgeType;
         enrolledStudents = Math.max(0, enrolledStudents);
         completedHours = Math.max(0, completedHours);
