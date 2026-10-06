@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<VBox
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.app.features.profile.ProfileController"
+    spacing="18.0"
+    styleClass="app-screen"
+>
+    <Label text="Mi perfil" styleClass="screen-title" />
+    <VBox spacing="14.0" styleClass="profile-card">
+        <VBox spacing="4.0" styleClass="profile-field">
+            <Label text="Nombre" styleClass="profile-field-label" />
+            <Label fx:id="displayName" styleClass="profile-field-value" />
+        </VBox>
+        <VBox spacing="4.0" styleClass="profile-field">
+            <Label text="Usuario" styleClass="profile-field-label" />
+            <Label fx:id="username" styleClass="profile-field-value" />
+        </VBox>
+        <VBox spacing="4.0" styleClass="profile-field">
+            <Label text="Roles" styleClass="profile-field-label" />
+            <Label
+                fx:id="roles"
+                styleClass="profile-field-value"
+                wrapText="true"
+            />
+        </VBox>
+    </VBox>
+</VBox>

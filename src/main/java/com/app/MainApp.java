@@ -4,13 +4,13 @@ import java.time.Duration;
 
 import com.app.api.ApiClient;
 import com.app.api.MockApiClient;
-import com.app.auth.SplashView;
 import com.app.auth.TokenStore;
+import com.app.auth.UserSession;
 import com.app.config.AppConfig;
+import com.app.features.auth.LoginScreen;
+import com.app.features.auth.SplashScreen;
 import com.app.layout.MainShell;
 import com.app.navigation.ScreenRouter;
-import com.app.session.UserSession;
-import com.app.views.LoginView;
 
 import atlantafx.base.theme.PrimerLight;
 import javafx.animation.KeyFrame;
@@ -41,23 +41,25 @@ public class MainApp extends Application {
     router = new ScreenRouter(rootContent);
 
     // Registro de rutas globales
-    router.registerView("splash", data -> new SplashView(
-        API,
-        TOKENS,
-        tokens -> router.navigateTo("main"),
-        () -> router.navigateTo("login")));
+    router.registerView(
+        "splash",
+        data -> new SplashScreen(
+            API,
+            TOKENS,
+            tokens -> router.navigateTo("main"),
+            () -> router.navigateTo("login")));
 
-    router.registerView("login", data -> new LoginView(
-        API,
-        TOKENS,
-        tokens -> router.navigateTo("main")));
+    router.registerView(
+        "login", data -> new LoginScreen(API, TOKENS, tokens -> router.navigateTo("main")));
 
-    router.registerView("main", data -> new MainShell(
-        API,
-        () -> {
-          TOKENS.clear();
-          router.navigateTo("login");
-        }));
+    router.registerView(
+        "main",
+        data -> new MainShell(
+            API,
+            () -> {
+              TOKENS.clear();
+              router.navigateTo("login");
+            }));
 
     // Envoltorio Mobile-First
 
@@ -80,24 +82,32 @@ public class MainApp extends Application {
    * automáticamente.
    */
   private void watchInactivity(Stage stage) {
-    Timeline timer = new Timeline(new KeyFrame(javafx.util.Duration.seconds(60), e -> {
-      UserSession session = UserSession.getInstance();
-      if (session.isLoggedIn() && session.isInactive(Duration.ofMinutes(AppConfig.inactivityMinutes()))) {
-        session.logout();
-        TOKENS.clear();
-        if (router != null) {
-          router.navigateTo("login");
-        }
-      }
-    }));
+    Timeline timer = new Timeline(
+        new KeyFrame(
+            javafx.util.Duration.seconds(60),
+            e -> {
+              UserSession session = UserSession.getInstance();
+              if (session.isLoggedIn()
+                  && session.isInactive(Duration.ofMinutes(AppConfig.inactivityMinutes()))) {
+                session.logout();
+                TOKENS.clear();
+                if (router != null) {
+                  router.navigateTo("login");
+                }
+              }
+            }));
     timer.setCycleCount(Timeline.INDEFINITE);
     timer.play();
 
-    stage.sceneProperty().addListener((obs, oldScene, newScene) -> {
-      if (newScene != null) {
-        newScene.addEventFilter(javafx.scene.input.InputEvent.ANY, ev -> UserSession.getInstance().touch());
-      }
-    });
+    stage
+        .sceneProperty()
+        .addListener(
+            (obs, oldScene, newScene) -> {
+              if (newScene != null) {
+                newScene.addEventFilter(
+                    javafx.scene.input.InputEvent.ANY, ev -> UserSession.getInstance().touch());
+              }
+            });
   }
 
   public static void main(String[] args) {

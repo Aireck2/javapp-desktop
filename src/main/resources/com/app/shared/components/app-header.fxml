@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<fx:root
+    type="HBox"
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    alignment="CENTER_LEFT"
+    spacing="10.0"
+    styleClass="portal-header"
+>
+    <ImageView
+        fx:id="appIcon"
+        fitWidth="34.0"
+        fitHeight="34.0"
+        preserveRatio="true"
+        styleClass="portal-app-icon"
+    />
+    <VBox spacing="2.0">
+        <Label text="Mis Cursos •" styleClass="portal-header-title" />
+        <Label
+            fx:id="subtitleLabel"
+            text="PORTAL"
+            styleClass="portal-header-subtitle"
+        />
+    </VBox>
+    <Region HBox.hgrow="ALWAYS" />
+    <Button
+        fx:id="avatarButton"
+        styleClass="portal-avatar-button"
+        accessibleText="Menú de usuario"
+    />
+</fx:root>

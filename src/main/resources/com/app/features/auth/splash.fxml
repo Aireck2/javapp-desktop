@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<fx:root
+    type="VBox"
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    alignment="CENTER"
+    spacing="12.0"
+    styleClass="app-screen"
+>
+    <Region VBox.vgrow="ALWAYS" />
+    <VBox alignment="CENTER" spacing="20.0" maxWidth="350.0" minWidth="300.0">
+        <HBox
+            alignment="CENTER"
+            spacing="6.0"
+            styleClass="splash-official-badge"
+        >
+            <Circle radius="3.0" styleClass="login-period-dot" />
+            <Label
+                text="PLATAFORMA OFICIAL"
+                styleClass="splash-official-label"
+            />
+        </HBox>
+        <StackPane
+            prefWidth="110.0"
+            prefHeight="110.0"
+            maxWidth="110.0"
+            maxHeight="110.0"
+            styleClass="splash-logo-card"
+        >
+            <ImageView
+                fx:id="logo"
+                fitWidth="76.0"
+                fitHeight="76.0"
+                preserveRatio="true"
+            />
+            <HBox
+                alignment="CENTER"
+                prefWidth="22.0"
+                prefHeight="22.0"
+                maxWidth="22.0"
+                maxHeight="22.0"
+                StackPane.alignment="BOTTOM_RIGHT"
+                styleClass="splash-check-badge"
+            >
+                <Label text="✓" styleClass="splash-check" />
+            </HBox>
+        </StackPane>
+        <VBox alignment="CENTER" spacing="6.0">
+            <Label text="Portal Académico" styleClass="splash-title" />
+            <Label
+                text="Control de Asistencia &amp; Gestión&#10;Universitaria"
+                wrapText="true"
+                textAlignment="CENTER"
+                styleClass="splash-subtitle"
+            />
+        </VBox>
+        <VBox
+            alignment="CENTER"
+            spacing="10.0"
+            styleClass="splash-progress-box"
+        >
+            <ProgressBar
+                fx:id="progressBar"
+                progress="0.0"
+                maxWidth="Infinity"
+                styleClass="splash-progress"
+            />
+            <HBox alignment="CENTER" spacing="6.0">
+                <Circle radius="3.0" styleClass="login-period-dot" />
+                <Label
+                    fx:id="statusLabel"
+                    text="Verificando credenciales institucionales..."
+                    styleClass="splash-status"
+                />
+            </HBox>
+            <Label fx:id="percentLabel" text="0%" styleClass="splash-percent" />
+        </VBox>
+    </VBox>
+    <Region VBox.vgrow="ALWAYS" />
+    <VBox alignment="CENTER" spacing="6.0">
+        <HBox
+            alignment="CENTER"
+            spacing="6.0"
+            styleClass="splash-security-badge"
+        >
+            <Label text="🛡" styleClass="splash-security-icon" />
+            <Label
+                text="Acceso Seguro SSL • RBAC Docente"
+                styleClass="splash-security-text"
+            />
+        </HBox>
+        <Label
+            text="Sistema de Información Académica v2.4"
+            styleClass="splash-version"
+        />
+        <Label
+            text="© 2024 Universidad • Todos los derechos reservados"
+            styleClass="splash-copyright"
+        />
+    </VBox>
+</fx:root>

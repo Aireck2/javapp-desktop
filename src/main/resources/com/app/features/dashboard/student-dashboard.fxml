@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<fx:root
+    type="VBox"
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    spacing="16.0"
+    styleClass="app-screen"
+>
+    <Label fx:id="studentTitle" styleClass="screen-title" wrapText="true" />
+    <StackPane fx:id="stateContainer" styleClass="dashboard-state-container" />
+</fx:root>

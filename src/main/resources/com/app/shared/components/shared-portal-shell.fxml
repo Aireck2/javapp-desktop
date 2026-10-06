@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<fx:root
+    type="BorderPane"
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    styleClass="portal-shell"
+>
+    <top>
+        <StackPane fx:id="headerHost" styleClass="portal-header-host" />
+    </top>
+    <center>
+        <ScrollPane
+            fx:id="scrollContent"
+            fitToWidth="true"
+            styleClass="portal-scroll"
+        />
+    </center>
+    <bottom>
+        <StackPane fx:id="bottomHost" styleClass="portal-bottom-host" />
+    </bottom>
+</fx:root>

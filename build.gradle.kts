@@ -2,6 +2,7 @@ plugins {
     java
     application
     jacoco
+    id("com.diffplug.spotless") version "8.10.3"
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
@@ -65,6 +66,28 @@ tasks.jacocoTestReport {
 
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
+}
+
+spotless {
+    java {
+        googleJavaFormat("1.36.0")
+    }
+
+    format("css") {
+        target("src/main/resources/**/*.css")
+        prettier(mapOf("prettier" to "3.9.9"))
+            .config(mapOf("parser" to "css", "tabWidth" to 2))
+    }
+
+    format("fxml") {
+        target("src/main/resources/**/*.fxml")
+        prettier(mapOf("prettier" to "3.9.9", "@prettier/plugin-xml" to "3.4.2"))
+            .config(mapOf(
+                "plugins" to listOf("@prettier/plugin-xml"),
+                "tabWidth" to 4,
+                "xmlWhitespaceSensitivity" to "ignore"
+            ))
+    }
 }
 
 // jpackage manual (requiere JDK 21 en la plataforma de destino).
